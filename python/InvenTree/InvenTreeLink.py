@@ -381,7 +381,10 @@ class ShowPartChangedHandler(adsk.core.InputChangedEventHandler):
         # create part itself
         part = Part.create(inv_api(), part_kargs)
         # check if part created - else raise error
-        if not part.pk:
+        if not part:
+            _APP_UI.messageBox(f'Error occured during API-call')
+            return
+        elif not part.pk:
             error_detail = [f'<strong>{a}</strong>\n{b[0]}' for a, b in part._data.items()]
             _APP_UI.messageBox(f'Error occured:<br><br>{"<br>".join(error_detail)}')
             return
