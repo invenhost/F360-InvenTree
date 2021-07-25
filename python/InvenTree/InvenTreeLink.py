@@ -367,17 +367,22 @@ class ShowPartChangedHandler(adsk.core.InputChangedEventHandler):
 
     def part_create(self, occ, cat, para_cat):
         """ create part based on occurence """
-        # create part itself
-        part = Part.create(inv_api(), {
+        # build up args
+        part_kargs = {
             'name': occ.component.name,
             'description': occ.component.description if occ.component.description else 'None',
             'IPN': occ.component.partNumber,
-            'category': cat.pk,
             'active': True,
             'virtual': False,
-        })
+        }
+        # add category if set
+        if cat:
+            part_kargs.update({'category': cat.pk})
+        # create part itself
+        part = Part.create(inv_api(), part_kargs)
         # create the reference parameter
-        Parameter.create(inv_api(), {'part': part.pk, 'template': para_cat.pk, 'data': occ.component.id})
+        if para_cat:
+            Parameter.create(inv_api(), {'part': part.pk, 'template': para_cat.pk, 'data': occ.component.id})
         return part
 
     def part_refresh(self, occ, inp, part):
