@@ -380,6 +380,12 @@ class ShowPartChangedHandler(adsk.core.InputChangedEventHandler):
             part_kargs.update({'category': cat.pk})
         # create part itself
         part = Part.create(inv_api(), part_kargs)
+        # check if part created - else raise error
+        if not part.pk:
+            error_detail = [f'<strong>{a}</strong>\n{b[0]}' for a, b in part._data.items()]
+            _APP_UI.messageBox(f'Error occured:<br><br>{"<br>".join(error_detail)}')
+            return
+
         # create the reference parameter
         if para_cat:
             Parameter.create(inv_api(), {'part': part.pk, 'template': para_cat.pk, 'data': occ.component.id})
