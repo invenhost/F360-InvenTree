@@ -61,8 +61,11 @@ def config_ref(ref):
         if REF_CACHE.get(ref):
             return REF_CACHE.get(ref)
 
-        REF_CACHE[ref] = [a for a in cat.list(inv_api()) if a.name == config_get(ref)][0]
-        return REF_CACHE[ref]
+        ref_vals = [a for a in cat.list(inv_api()) if a.name == config_get(ref)]
+        if ref_vals:
+            REF_CACHE[ref] = ref_vals[0]
+            return REF_CACHE[ref]
+        return None
 
     # set the API-objects
     if ref == 'category':
