@@ -1,5 +1,5 @@
 # F360-InvTree
-Bom-Management-Plugin for Fusion360 + InvenTree created by Matthias Mair licensed as MIT-code.
+BOM-Management-Plugin for Fusion360 + InvenTree created by Matthias Mair licensed as MIT-code.
 
 Would not be possible without some great other projects see the [acknowledgments](https://github.com/matmair/F360-InvTree/python/InvenTree/readme.md) for details.
 
