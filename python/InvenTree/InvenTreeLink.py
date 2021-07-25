@@ -359,7 +359,7 @@ class ShowPartChangedHandler(adsk.core.InputChangedEventHandler):
                     # make part
                     part = self.part_create(occ, config_ref('category'), config_ref('part_id'))
                     # refresh display
-                    self.part_refresh(occ, inp, Part(inv_api(), part.pk))
+                    self.part_refresh(occ, inp, part)
                 else:
                     print('not found')
         except Exception:
