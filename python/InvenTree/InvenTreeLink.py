@@ -61,8 +61,11 @@ def config_ref(ref):
         if REF_CACHE.get(ref):
             return REF_CACHE.get(ref)
 
-        REF_CACHE[ref] = [a for a in cat.list(inv_api()) if a.name == config_get(ref)][0]
-        return REF_CACHE[ref]
+        ref_vals = [a for a in cat.list(inv_api()) if a.name == config_get(ref)]
+        if ref_vals:
+            REF_CACHE[ref] = ref_vals[0]
+            return REF_CACHE[ref]
+        return None
 
     # set the API-objects
     if ref == 'category':
@@ -356,7 +359,7 @@ class ShowPartChangedHandler(adsk.core.InputChangedEventHandler):
                     # make part
                     part = self.part_create(occ, config_ref('category'), config_ref('part_id'))
                     # refresh display
-                    self.part_refresh(occ, inp, Part(inv_api(), part.pk))
+                    self.part_refresh(occ, inp, part)
                 else:
                     print('not found')
         except Exception:
@@ -364,35 +367,61 @@ class ShowPartChangedHandler(adsk.core.InputChangedEventHandler):
 
     def part_create(self, occ, cat, para_cat):
         """ create part based on occurence """
-        # create part itself
-        part = Part.create(inv_api(), {
+        # build up args
+        part_kargs = {
             'name': occ.component.name,
             'description': occ.component.description if occ.component.description else 'None',
             'IPN': occ.component.partNumber,
-            'category': cat.pk,
             'active': True,
             'virtual': False,
-        })
+        }
+        # add category if set
+        if cat:
+            part_kargs.update({'category': cat.pk})
+        # create part itself
+        part = Part.create(inv_api(), part_kargs)
+        # check if part created - else raise error
+        if not part.pk:
+            error_detail = [f'<strong>{a}</strong>\n{b[0]}' for a, b in part._data.items()]
+            _APP_UI.messageBox(f'Error occured:<br><br>{"<br>".join(error_detail)}')
+            return
+
         # create the reference parameter
-        Parameter.create(inv_api(), {'part': part.pk, 'template': para_cat.pk, 'data': occ.component.id})
+        if para_cat:
+            Parameter.create(inv_api(), {'part': part.pk, 'template': para_cat.pk, 'data': occ.component.id})
         return part
 
     def part_refresh(self, occ, inp, part):
         """ updates PartInfo command-inputs with values for supplied parts """
         unitsMgr = _APP.activeDocument.design.unitsManager
+
+        def setText(text_name, item):
+            value = item if item else ''
+            inp.itemById(text_name).text = str(value)
+
+        def setFormatValue(text_name, item, format_string, display_unit=None, display_format=True):
+            if not display_unit:
+                display_unit = ''
+            else:
+                display_format = False
+            if str(item) == 'nan':
+                item = 0
+            value = format_string % float(unitsMgr.formatInternalValue(item, display_unit, display_format))
+            setText(text_name, value)
+
         # Compnent Infos
-        inp.itemById('text_id').text = occ.component.id
-        inp.itemById('text_name').text = occ.component.name
-        inp.itemById('text_description').text = occ.component.description
-        inp.itemById('text_opacity').text = str(occ.component.opacity)
-        inp.itemById('text_partNumber').text = occ.component.partNumber
+        setText('text_id', occ.component.id)
+        setText('text_name', occ.component.name)
+        setText('text_description', occ.component.description)
+        setText('text_opacity', occ.component.opacity)
+        setText('text_partNumber', occ.component.partNumber)
 
         # Physics
-        inp.itemById('text_area').text = '%.3f cm2' % float(unitsMgr.formatInternalValue(occ.physicalProperties.area, '', True))
-        inp.itemById('text_volume').text = '%.3f cm3' % float(unitsMgr.formatInternalValue(occ.physicalProperties.volume, '', True))
-        inp.itemById('text_mass').text = '%.3f g' % float(unitsMgr.formatInternalValue(occ.physicalProperties.mass, 'g', False))
-        inp.itemById('text_density').text = '%.3f g/cm3' % float(unitsMgr.formatInternalValue(occ.physicalProperties.density, 'g/cm/cm/cm', False))
-        inp.itemById('text_material').text = occ.component.material.name if occ.component.material else ''
+        setFormatValue('text_area', occ.physicalProperties.area, '%.3f cm2')
+        setFormatValue('text_volume', occ.physicalProperties.volume, '%.3f cm3')
+        setFormatValue('text_mass', occ.physicalProperties.mass, '%.3f g', 'g')
+        setFormatValue('text_density', occ.physicalProperties.density, '%.3f g/cm3', 'g/cm/cm/cm')
+        setText('text_material', occ.component.material.name if occ.component.material else '')
 
         # bounding box
         axis = ['x', 'y', 'z']
@@ -422,13 +451,13 @@ class ShowPartChangedHandler(adsk.core.InputChangedEventHandler):
                 pass
             #     inp.itemById('text_part_image').imageFile = part.thumbnail
             #     inp.itemById('text_part_image').isVisible = True
-            inp.itemById('text_part_name').text = part.name
-            inp.itemById('text_part_ipn').text = part.IPN if part.IPN else ''
-            inp.itemById('text_part_description').text = part.description if part.description else ''
-            inp.itemById('text_part_notes').text = part.notes if part.notes else ''
-            inp.itemById('text_part_keywords').text = part.keywords if part.keywords else ''
-            inp.itemById('text_part_category').text = part.getCategory().pathstring
-            inp.itemById('text_part_stock').text = str(part.in_stock)
+            setText('text_part_name', part.name)
+            setText('text_part_ipn', part.IPN)
+            setText('text_part_description', part.description)
+            setText('text_part_notes', part.notes)
+            setText('text_part_keywords', part.keywords)
+            setText('text_part_category', part.getCategory().pathstring)
+            setText('text_part_stock', part.in_stock)
             inp.itemById('bool_part_virtual').value = part.virtual
             inp.itemById('bool_part_template').value = part.is_template
             inp.itemById('bool_part_assembly').value = part.assembly
@@ -436,8 +465,8 @@ class ShowPartChangedHandler(adsk.core.InputChangedEventHandler):
             inp.itemById('bool_part_trackable').value = part.trackable
             inp.itemById('bool_part_purchaseable').value = part.purchaseable
             inp.itemById('bool_part_salable').value = part.salable
-            inp.itemById('text_part_bom').text = str(part.name)
-            inp.itemById('text_part_suppliers').text = str(part.suppliers)
+            setText('text_part_bom', part.name)
+            setText('text_part_suppliers', part.suppliers)
             message = '<div align="center">open <b>part %s</b> in <b>%s</b> <a href="%s">with this link</a>.</div>' % (part.pk, inv_api().server_details['instance'], inv_api().base_url[:-4] + part._url)
             inp.itemById('text_part_link').formattedText = message
             if part.link:
