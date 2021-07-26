@@ -1,4 +1,23 @@
-## Welcome to GitHub Pages
+## F360-InvenTree Addin-documentation
+
+A BOM-Management-Addin for Fusion360 + InvenTree created by [Matthias Mair](https://mjmair.com) licensed under the [MIT license](https://github.com/matmair/F360-InvTree/blob/main/LICENSE).
+
+{{site.data.alerts.note}}
+This code is very much not finished and just a few hundred lines.
+{{site.data.alerts.end}}
+
+### Why
+InvenTree is a great project for managing parts and BOMS and there is a fantastic plugin for KiCad to get data into it. But I use Fusion360 so here is a Addin for doing that.
+
+### Base functionality: Linking
+
+Each component in Fusion360 has a unique identifier - this identifier can be saved as a parameter to InvenTree. When using linked parts in Fusion360 the Addin can either read all identifiers and match them with InvenTree parameters or the parts primary-keys can be saved as a attribute within the components.
+
+### Included tools
+
+The Addin renders a palette which displays all components in the currently open file. The user can load in if the Fusion360 components are linked to a InvenTree part.
+Components can also be added to InvenTree as parts or linked with parts.
+
 
 ### Installation
 
