@@ -1,37 +1,49 @@
-## Welcome to GitHub Pages
+## F360-InvenTree Addin-documentation
 
-You can use the [editor on GitHub](https://github.com/matmair/F360-InvTree/edit/main/docs/index.md) to maintain and preview the content for your website in Markdown files.
+A BOM-Management-Addin for Fusion360 + InvenTree created by [Matthias Mair](https://mjmair.com) licensed under the [MIT license](https://github.com/matmair/F360-InvTree/blob/main/LICENSE).
 
-Whenever you commit to this repository, GitHub Pages will run [Jekyll](https://jekyllrb.com/) to rebuild the pages in your site, from the content in your Markdown files.
+{{site.data.alerts.note}}
+This code is very much not finished and just a few hundred lines.
+{{site.data.alerts.end}}
 
-### Markdown
+### Why
+InvenTree is a great project for managing parts and BOMS and there is a fantastic plugin for KiCad to get data into it. But I use Fusion360 so here is a Addin for doing that.
 
-Markdown is a lightweight and easy-to-use syntax for styling your writing. It includes conventions for
+### Base functionality: Linking
 
-```markdown
-Syntax highlighted code block
+Each component in Fusion360 has a unique identifier - this identifier can be saved as a parameter to InvenTree. When using linked parts in Fusion360 the Addin can either read all identifiers and match them with InvenTree parameters or the parts primary-keys can be saved as a attribute within the components.
 
-# Header 1
-## Header 2
-### Header 3
+### Included tools
 
-- Bulleted
-- List
+The Addin renders a palette which displays all components in the currently open file. The user can load in if the Fusion360 components are linked to a InvenTree part.
+Components can also be added to InvenTree as parts or linked with parts.
 
-1. Numbered
-2. List
 
-**Bold** and _Italic_ and `Code` text
+### Installation
 
-[Link](url) and ![Image](src)
+1. Get a release (please do not try to use the `main` branch - there is no CI right now)
+1. Unpack it
+1. Place it into %AppData%\Autodesk\Autodesk Fusion 360\API\AddIns`
+1. Enable it in the fusion360 Addin - panel
+
+There is also a nice [guide by Autodesk](https://knowledge.autodesk.com/support/fusion-360/troubleshooting/caas/sfdcarticles/sfdcarticles/How-to-install-an-ADD-IN-and-Script-in-Fusion-360.html).
+
+### Configuration
+
+The Addin is configured using a file named `conf.ini` in the `InvenTree` directory.
+
+```ini
+[SERVER]
+current = local
+
+[local]
+address = http://127.0.0.1:8000/
+token = ee335d3eb22186token5e824e0ad4837ac874
+category = plugin-test
+part_id = Fusion360-ID
 ```
 
-For more details see [GitHub Flavored Markdown](https://guides.github.com/features/mastering-markdown/).
-
-### Jekyll Themes
-
-Your Pages site will use the layout and styles from the Jekyll theme you have selected in your [repository settings](https://github.com/matmair/F360-InvTree/settings/pages). The name of this theme is saved in the Jekyll `_config.yml` configuration file.
-
-### Support or Contact
-
-Having trouble with Pages? Check out our [documentation](https://docs.github.com/categories/github-pages-basics/) or [contact support](https://support.github.com/contact) and we’ll help you sort it out.
+`adress` is the URL of the InvenTree instance that should be used  
+`token` is a valid token to write information to InvenTree  
+`category` is the name of the category new parts should be placed into  
+`part_id` is the name of the Parameter that should be used to save the Fusion360 parts number  
