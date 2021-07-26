@@ -276,7 +276,7 @@ class SendBomCommandExecuteHandler(adsk.core.CommandEventHandler):
                 body = ''.join(['<tr><td>%s</td><td>%s</td></tr>' % (a['name'], a['instances']) for a in BOM])
                 table_c = '<div class="overflow-auto"><table class="table table-sm table-striped table-hover"><thead><tr><th scope="col">Name</th><th scope="col">Count</th></tr></thead><tbody>{body}</tbody></table></div>'.format(body=body)
 
-                palette.sendInfoToHTML('sendBom', '<p>{nbr} Stücke gefunden in {time}</p>{table}'.format(nbr=len(BOM), table=table_c, time=datetime.now() - start))
+                palette.sendInfoToHTML('sendBom', '<p>{nbr} parts found in {time}</p>{table}'.format(nbr=len(BOM), table=table_c, time=datetime.now() - start))
                 palette.sendInfoToHTML('sendTree', json.dumps(BOM_HIR))
         except Exception:
             error('cmd')
@@ -311,7 +311,7 @@ class SendBomOnlineCommandExecuteHandler(adsk.core.CommandEventHandler):
                     a['status'] = inv_status[a['id']]
 
                 body = ''.join(['<tr><td>%s</td><td>%s</td><td>%s</td></tr>' % (a['name'], a['instances'], a['status']) for a in BOM])
-                table = '<div class="overflow-auto"><table class="table table-sm table-striped table-hover"><thead><tr><th scope="col">Name</th><th scope="col">Count</th><th scope="col">Status</th></tr></thead><tbody>{body}</tbody></table></div>'.format(body=body)
+                table = '<div class="overflow-auto"><table class="table table-sm table-striped table-hover"><thead><tr><th scope="col">Name</th><th scope="col">Count</th><th scope="col">Is InvenTree</th></tr></thead><tbody>{body}</tbody></table></div>'.format(body=body)
 
                 palette.sendInfoToHTML('sendBom', '{table}'.format(table=table))
         except Exception:
@@ -633,7 +633,7 @@ def run(context):
         # Add a command that displays the panel.
         showPaletteCmdDef = _APP_UI.commandDefinitions.itemById('ShowPalette')
         if not showPaletteCmdDef:
-            showPaletteCmdDef = _APP_UI.commandDefinitions.addButtonDefinition('ShowPalette', 'Show Palette', 'Show the palette for the BOM', 'resources\\ShowPalette')
+            showPaletteCmdDef = _APP_UI.commandDefinitions.addButtonDefinition('ShowPalette', 'Show BOM overview', 'Show the BOM overview palette.', 'resources\\ShowPalette')
 
             # Connect to Command Created event.
             onCommandCreated = ShowPaletteCommandCreatedHandler()
@@ -643,7 +643,7 @@ def run(context):
 
         SendBomCmdDef = _APP_UI.commandDefinitions.itemById('SendBom')
         if not SendBomCmdDef:
-            SendBomCmdDef = _APP_UI.commandDefinitions.addButtonDefinition('SendBom', 'get BOM', 'Send BOM-Info to Palette HTML', 'resources\\SendBom')
+            SendBomCmdDef = _APP_UI.commandDefinitions.addButtonDefinition('SendBom', 'Load BOM for assembly', 'Load the BOM for the assembly in the current file.', 'resources\\SendBom')
             SendBomCmdDef.isPromotedByDefault = True
             SendBomCmdDef.isPromoted = True
 
@@ -655,7 +655,7 @@ def run(context):
 
         SendBomOnlineCmdDef = _APP_UI.commandDefinitions.itemById('SendOnlineState')
         if not SendBomOnlineCmdDef:
-            SendBomOnlineCmdDef = _APP_UI.commandDefinitions.addButtonDefinition('SendOnlineState', 'get online status', 'gets the online status for all BOM-parts', 'resources\\SendOnlineState')
+            SendBomOnlineCmdDef = _APP_UI.commandDefinitions.addButtonDefinition('SendOnlineState', 'Get InvenTree Information', 'Fetch the InvenTree information for all BOM-parts.', 'resources\\SendOnlineState')
 
             # Connect to Command Created event.
             onCommandCreated = SendBomOnlineCommandCreatedHandler()
@@ -665,7 +665,7 @@ def run(context):
 
         SendShowPartCmdDef = _APP_UI.commandDefinitions.itemById('SendPart')
         if not SendShowPartCmdDef:
-            SendShowPartCmdDef = _APP_UI.commandDefinitions.addButtonDefinition('SendPart', 'get online status', 'gets the online status for all BOM-parts', 'resources\\SendPart')
+            SendShowPartCmdDef = _APP_UI.commandDefinitions.addButtonDefinition('SendPart', 'Show part details', 'Show the InvenTree part-details for the selected part.', 'resources\\SendPart')
             SendShowPartCmdDef.isPromotedByDefault = True
             SendShowPartCmdDef.isPromoted = True
 
