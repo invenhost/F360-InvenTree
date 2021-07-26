@@ -23,7 +23,7 @@ Components can also be added to InvenTree as parts or linked with parts.
 
 1. Get a release (please do not try to use the `main` branch - there is no CI right now)
 1. Unpack it
-1. Place it into %AppData%\Autodesk\Autodesk Fusion 360\API\AddIns`
+1. Place it into `%AppData%\Autodesk\Autodesk Fusion 360\API\AddIns`
 1. Enable it in the fusion360 Addin - panel
 
 There is also a nice [guide by Autodesk](https://knowledge.autodesk.com/support/fusion-360/troubleshooting/caas/sfdcarticles/sfdcarticles/How-to-install-an-ADD-IN-and-Script-in-Fusion-360.html).
