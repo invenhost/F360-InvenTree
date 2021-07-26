@@ -1,37 +1,30 @@
 ## Welcome to GitHub Pages
 
-You can use the [editor on GitHub](https://github.com/matmair/F360-InvTree/edit/main/docs/index.md) to maintain and preview the content for your website in Markdown files.
+### Installation
 
-Whenever you commit to this repository, GitHub Pages will run [Jekyll](https://jekyllrb.com/) to rebuild the pages in your site, from the content in your Markdown files.
+1. Get a release (please do not try to use the `main` branch - there is no CI right now)
+1. Unpack it
+1. Place it into %AppData%\Autodesk\Autodesk Fusion 360\API\AddIns`
+1. Enable it in the fusion360 Addin - panel
 
-### Markdown
+There is also a nice [guide by Autodesk](https://knowledge.autodesk.com/support/fusion-360/troubleshooting/caas/sfdcarticles/sfdcarticles/How-to-install-an-ADD-IN-and-Script-in-Fusion-360.html).
 
-Markdown is a lightweight and easy-to-use syntax for styling your writing. It includes conventions for
+### Configuration
 
-```markdown
-Syntax highlighted code block
+The Addin is configured using a file named `conf.ini` in the `InvenTree` directory.
 
-# Header 1
-## Header 2
-### Header 3
+```ini
+[SERVER]
+current = local
 
-- Bulleted
-- List
-
-1. Numbered
-2. List
-
-**Bold** and _Italic_ and `Code` text
-
-[Link](url) and ![Image](src)
+[local]
+address = http://127.0.0.1:8000/
+token = ee335d3eb22186token5e824e0ad4837ac874
+category = plugin-test
+part_id = Fusion360-ID
 ```
 
-For more details see [GitHub Flavored Markdown](https://guides.github.com/features/mastering-markdown/).
-
-### Jekyll Themes
-
-Your Pages site will use the layout and styles from the Jekyll theme you have selected in your [repository settings](https://github.com/matmair/F360-InvTree/settings/pages). The name of this theme is saved in the Jekyll `_config.yml` configuration file.
-
-### Support or Contact
-
-Having trouble with Pages? Check out our [documentation](https://docs.github.com/categories/github-pages-basics/) or [contact support](https://support.github.com/contact) and we’ll help you sort it out.
+`adress` is the URL of the InvenTree instance that should be used  
+`token` is a valid token to write information to InvenTree  
+`category` is the name of the category new parts should be placed into  
+`part_id` is the name of the Parameter that should be used to save the Fusion360 parts number  
