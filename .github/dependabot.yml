@@ -1,6 +1,6 @@
 version: 2
 updates:
   - package-ecosystem: "pip" 
-    directory: "python/InvenTree/requirements.txt" # Location of package manifests
+    directory: "python/InvenTree" # Location of package manifests
     schedule:
       interval: "daily"
