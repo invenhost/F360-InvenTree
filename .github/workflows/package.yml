@@ -1,0 +1,52 @@
+# updates modules and publishes them
+
+name: package for Fusion360
+
+on:
+  push:
+    branches:
+      - "!*"
+    tags:
+      - "v*"
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: [3.9]
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Install zip
+      run: sudo apt-get install zip unzip
+    - name: Make venv
+      run: |
+        python -m venv venv
+        source venv/bin/activate
+    - name: update dependencies and zip
+      run: |
+        python -m pip install --upgrade pip
+        rm python/InvenTree/Modules -r
+        pip install -r python/InvenTree/requirements.txt -t python/InvenTree/Modules
+        zip -r F360-InvTree_dev.zip python/InvenTree
+    - uses: actions/upload-artifact@v2
+      with:
+        name: Addin-Release
+        path: F360-InvTree_dev.zip
+    - name: upload release
+      id: upload-release-asset
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: https://api.github.com/repos/matmair/F360-InvTree/releases/latest
+        asset_path: F360-InvTree_dev.zip
+        asset_name: Addin data
+        asset_content_type: application/zip
