@@ -1,0 +1,39 @@
+# updates modules and publishes them
+
+name: Python package
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: [3.9]
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Install zip
+      run: apt-get install zip unzip
+    - name: Make venv
+      run: |
+        python -m venv venv
+        source venv/bin/activate
+    - name: update dependencies and zip
+      run: |
+        python -m pip install --upgrade pip
+        rm python/InvenTree/Modules -r
+        pip install -r python/InvenTree/requirements.txt -t python/InvenTree/Modules
+        zip -r F360-InvTree_dev.zip python/
+    - uses: actions/upload-artifact@v2
+      with:
+        name: Addin-Release
+        path: F360-InvTree_dev.zip
