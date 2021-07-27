@@ -6,5 +6,5 @@ More info [here](https://matmair.github.io/F360-InvTree/).
 
 # TODO
 - [ ] GUI for settings
-- [ ] docs for install
-- [ ] CI to update dependencies (Modules) and maybe make a win installer
+- [x] docs for install
+- [x] CI to update dependencies (Modules) and ~~maybe make a win installer~~  
