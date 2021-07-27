@@ -4,7 +4,10 @@ name: package for Fusion360
 
 on:
   push:
-    branches: [ main, devops ]
+    branches:
+      - "!*"
+    tags:
+      - "v*"
 
 jobs:
   build:
@@ -32,8 +35,18 @@ jobs:
         python -m pip install --upgrade pip
         rm python/InvenTree/Modules -r
         pip install -r python/InvenTree/requirements.txt -t python/InvenTree/Modules
-        zip -r F360-InvTree_dev.zip python/
+        zip -r F360-InvTree_dev.zip python/InvenTree
     - uses: actions/upload-artifact@v2
       with:
         name: Addin-Release
         path: F360-InvTree_dev.zip
+    - name: upload release
+      id: upload-release-asset
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: https://api.github.com/repos/matmair/F360-InvTree/releases/latest
+        asset_path: F360-InvTree_dev.zip
+        asset_name: Addin data
+        asset_content_type: application/zip
