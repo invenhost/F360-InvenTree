@@ -1,10 +1,10 @@
 # updates modules and publishes them
 
-name: Python package
+name: package for Fusion360
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, devops ]
 
 jobs:
   build:
