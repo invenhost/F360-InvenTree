@@ -22,7 +22,7 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
     - name: Install zip
-      run: apt-get install zip unzip
+      run: sudo apt-get install zip unzip
     - name: Make venv
       run: |
         python -m venv venv
