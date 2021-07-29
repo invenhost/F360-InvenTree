@@ -29,3 +29,12 @@ Licensed under a [MIT License](https://github.com/twbs/bootstrap/blob/main/LICEN
 
 ### Fugue-Icons 3.5.6
 Some icons by [Yusuke Kamiyamane](http://p.yusukekamiyamane.com/) Licensed under a [Creative Commons Attribution 3.0 License](http://creativecommons.org/licenses/by/3.0/).
+
+### InvenTree (icon)
+Copyright (c) 2017 InvenTree  
+Licensed under a [MIT License](https://github.com/inventree/InvenTree/blob/master/LICENSE).
+
+### InvenTree-python
+Copyright (c) 2019 InvenTree  
+Licensed under a [MIT License](https://github.com/inventree/inventree-python/blob/master/LICENSE).
+
