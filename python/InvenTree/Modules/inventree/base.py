@@ -2,14 +2,27 @@
 
 import os
 import logging
+import json
 
-INVENTREE_PYTHON_VERSION = "0.1.3"
+
+INVENTREE_PYTHON_VERSION = "0.3.2"
 
 
-class InventreeObject():
+logger = logging.getLogger('inventree')
+
+
+class InventreeObject(object):
     """ Base class for an InvenTree object """
 
     URL = ""
+
+    def __str__(self):
+        """
+        Simple human-readable printing.
+        Can override in subclass
+        """
+
+        return f"{type(self)}<pk={self.pk}>"
 
     def __init__(self, api, pk=None, data={}):
         """ Instantiate this InvenTree object.
@@ -33,6 +46,42 @@ class InventreeObject():
         if len(self._data) == 0:
             self.reload()
 
+    @classmethod
+    def fields(cls, api):
+        """
+        Returns a list of available fields for this model.
+
+        Introspects the available fields using an OPTIONS request.
+        """
+
+        response = api.request(
+            cls.URL,
+            method='options',
+        )
+
+        if not response.status_code == 200:
+            logger.error(f"OPTIONS for '{cls.URL}' returned code {response.status_code}")
+            return {}
+
+        try:
+            data = json.loads(response.text)
+        except json.decoder.JSONDecodeError:
+            logger.error(f"Error decoding JSON response for '{cls.URL}'")
+            return {}
+
+        actions = data.get('actions', {})
+        post = actions.get('POST', {})
+
+        return post
+
+    @classmethod
+    def fieldNames(cls, api):
+        """
+        Return a list of available field names for this model
+        """
+
+        return [k for k in cls.fields(api).keys()]
+
     @property
     def pk(self):
         """ Convenience method for accessing primary-key field """
@@ -49,7 +98,7 @@ class InventreeObject():
         response = api.post(cls.URL, data)
         
         if response is None:
-            logging.error("Error creating new object")
+            logger.error("Error creating new object")
             return None
 
         return cls(api, data=response)
@@ -88,12 +137,35 @@ class InventreeObject():
     def delete(self):
         """ Delete this object from the database """
         if self._api:
-            self._api.delete(self._url)
+            return self._api.delete(self._url)
 
-    def save(self):
-        """ Save this object to the database """
+    def save(self, data=None, files=None, method='PATCH'):
+        """
+        Save this object to the database
+        """
+        
+        # If 'data' is not specified, then use *all* the data
+        if data is None:
+            data = self._data
+        
         if self._api:
-            self._api.put(self._url, self._data)
+            
+            # Default method used is PATCH (partial update)
+            if method.lower() == 'patch':
+                response = self._api.patch(self._url, data, files=files)
+            elif method.lower() == 'put':
+                response = self._api.put(self._url, data, files=files)
+            else:
+                logger.warning(f"save() called with unknown method '{method}'")
+                return
+
+        # Automatically re-load data from the returned data
+        if response is not None:
+            self._data = response
+        else:
+            self.reload()
+
+        return response
 
     def reload(self):
         """ Reload object data from the database """
@@ -132,7 +204,7 @@ class Attachment(InventreeObject):
         """
 
         if not os.path.exists(filename):
-            logging.error("File does not exist: '{f}'".format(f=filename))
+            logger.error("File does not exist: '{f}'".format(f=filename))
             return
 
         f = os.path.basename(filename)
@@ -147,10 +219,19 @@ class Attachment(InventreeObject):
         }
 
         # Send the file off to the server
-        if api.post(cls.URL, data, files=files):
-            logging.info("Uploaded attachment file: '{f}'".format(f=f))
+        response = api.post(cls.URL, data, files=files)
+
+        if response and response.status_code in [200, 201]:
+            logger.info("Uploaded attachment file: '{f}'".format(f=f))
         else:
-            logging.warning("File upload failed")
+            logger.warning("File upload failed")
+
+    def download(self, destination):
+        """
+        Download the attachment file to the specified location
+        """
+
+        return self._api.downloadFile(self.attachment, destination)
 
 
 class Currency(InventreeObject):

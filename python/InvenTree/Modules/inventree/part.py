@@ -10,6 +10,9 @@ import inventree.company
 import inventree.build
 
 
+logger = logging.getLogger('inventree')
+
+
 class PartCategory(inventree.base.InventreeObject):
     """ Class representing the PartCategory database model """
 
@@ -80,25 +83,17 @@ class Part(inventree.base.InventreeObject):
         """ Return parameters associated with this part """
         return inventree.base.Parameter.list(self._api, part=self.pk)
 
-    def upload_image(self, image):
-        """ Upload an image against this Part """
-        return PartThumb.upload_thumbnail(self._api, self.pk, image)
-
-
-class PartThumb(inventree.base.InventreeObject):
-    """ Class representing the Part database model """
-
-    URL = 'part/thumbs'
-
-    @classmethod
-    def upload_thumbnail(cls, api, part, image):
+    def uploadImage(self, image):
         """
-        Upload a Part thumbnail
+        Upload an image against this Part
 
-        image: Attach an image
+        args:
+            - image: path to an image file
+        
+        Returns the HTTP response object
         """
+
         files = {}
-        fo = None
 
         if image:
             if os.path.exists(image):
@@ -106,19 +101,25 @@ class PartThumb(inventree.base.InventreeObject):
                 fo = open(image, 'rb')
                 files['image'] = (f, fo)
             else:
-                logging.error("File does not exist: '{f}'".format(f=image))
+                logger.error("File does not exist: '{f}'".format(f=image))
+                return None
 
-        data = {
-            'image': os.path.basename(image),
-        }
+        response = self.save(
+            data={},
+            files=files
+        )
 
-        # Send the data to the server
-        url = f'{cls.URL}/{part}/'
-        if api.put_image(url, data, files=files):
-            logging.info("Uploaded thumbnail: '{f}'".format(f=image))
-            return True
+        return response
+
+    def downloadImage(self, destination):
+        """
+        Download the image for this Part, to the specified destination
+        """
+
+        if self.image:
+            return self._api.downloadFile(self.image, destination)
         else:
-            logging.warning("Thumbnail upload failed")
+            logger.error(f"Part '{self.name}' does not have an associated image")
             return False
 
 
@@ -152,7 +153,7 @@ class PartAttachment(inventree.base.Attachment):
                 fo = open(attachment, 'rb')
                 files['attachment'] = (f, fo)
             else:
-                logging.error("File does not exist: '{f}'".format(f=attachment))
+                logger.error("File does not exist: '{f}'".format(f=attachment))
 
         comment = kwargs.get('comment', '')
 
@@ -164,10 +165,10 @@ class PartAttachment(inventree.base.Attachment):
 
         # Send the data to the server
         if api.post(cls.URL, data, files=files):
-            logging.info("Uploaded attachment: '{f}'".format(f=attachment))
+            logger.info("Uploaded attachment: '{f}'".format(f=attachment))
             ret = True
         else:
-            logging.warning("Attachment upload failed")
+            logger.warning("Attachment upload failed")
             ret = False
 
         return ret
