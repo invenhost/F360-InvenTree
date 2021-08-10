@@ -1,1 +1,1 @@
-inventree==0.3.2        # provides the API for InvenTree
+inventree==0.4.4        # provides the API for InvenTree
