@@ -19,6 +19,17 @@ from inventree.api import InvenTreeAPI
 from inventree.base import Parameter, ParameterTemplate
 from inventree.part import Part, PartCategory
 
+# setup sentry
+import sentry_sdk
+sentry_sdk.init(
+    "https://8b2c118182cd4d43bd6efe3f211b9595@o1047628.ingest.sentry.io/6024677",
+
+    # Set traces_sample_rate to 1.0 to capture 100%
+    # of transactions for performance monitoring.
+    # We recommend adjusting this value in production.
+    traces_sample_rate=1.0
+)
+
 # global variables for handling the addin-aspects
 _APP = adsk.core.Application.cast(None)
 _APP_UI = adsk.core.UserInterface.cast(None)
@@ -131,6 +142,7 @@ def _extract_bom():
         # Display the BOM
         return bom
     except Exception as _e:
+        sentry_sdk.capture_exception(_e)
         raise _e
 
 
@@ -204,6 +216,7 @@ def inventree_get_part(part_id):
                 return Part(inv_api(), part[0])
             return False
         except Exception as _e:
+            sentry_sdk.capture_exception(_e)
             raise Exception from _e
 
     parameters = Parameter.list(inv_api())
@@ -243,7 +256,8 @@ class ShowPaletteCommandExecuteHandler(adsk.core.CommandEventHandler):
                 _APP_HANDLERS.append(onClosed)
             else:
                 palette.isVisible = True
-        except Exception:
+        except Exception as _e:
+            sentry_sdk.capture_exception(_e)
             error('cmd')
 
 
@@ -256,7 +270,8 @@ class ShowPaletteCommandCreatedHandler(adsk.core.CommandCreatedEventHandler):
             onExecute = ShowPaletteCommandExecuteHandler()
             command.execute.add(onExecute)
             _APP_HANDLERS.append(onExecute)
-        except Exception:
+        except Exception as _e:
+            sentry_sdk.capture_exception(_e)
             error()
 
 
@@ -278,7 +293,8 @@ class SendBomCommandExecuteHandler(adsk.core.CommandEventHandler):
 
                 palette.sendInfoToHTML('sendBom', '<p>{nbr} parts found in {time}</p>{table}'.format(nbr=len(BOM), table=table_c, time=datetime.now() - start))
                 palette.sendInfoToHTML('sendTree', json.dumps(BOM_HIR))
-        except Exception:
+        except Exception as _e:
+            sentry_sdk.capture_exception(_e)
             error('cmd')
 
 
@@ -291,7 +307,8 @@ class SendBomCommandCreatedHandler(adsk.core.CommandCreatedEventHandler):
             onExecute = SendBomCommandExecuteHandler()
             command.execute.add(onExecute)
             _APP_HANDLERS.append(onExecute)
-        except Exception:
+        except Exception as _e:
+            sentry_sdk.capture_exception(_e)
             error()
 
 
@@ -314,7 +331,8 @@ class SendBomOnlineCommandExecuteHandler(adsk.core.CommandEventHandler):
                 table = '<div class="overflow-auto"><table class="table table-sm table-striped table-hover"><thead><tr><th scope="col">Name</th><th scope="col">Count</th><th scope="col">Is InvenTree</th></tr></thead><tbody>{body}</tbody></table></div>'.format(body=body)
 
                 palette.sendInfoToHTML('sendBom', '{table}'.format(table=table))
-        except Exception:
+        except Exception as _e:
+            sentry_sdk.capture_exception(_e)
             error('cmd')
 
 
@@ -327,7 +345,8 @@ class SendBomOnlineCommandCreatedHandler(adsk.core.CommandCreatedEventHandler):
             onExecute = SendBomOnlineCommandExecuteHandler()
             command.execute.add(onExecute)
             _APP_HANDLERS.append(onExecute)
-        except Exception:
+        except Exception as _e:
+            sentry_sdk.capture_exception(_e)
             error()
 
 
@@ -337,8 +356,8 @@ class SendShowPartCommandExecuteHandler(adsk.core.CommandEventHandler):
         """ generic function - called when handler called """
         try:
             print('clicked ok')
-            print(args)
-        except Exception:
+        except Exception as _e:
+            sentry_sdk.capture_exception(_e)
             error('cmd')
 
 
@@ -362,7 +381,8 @@ class ShowPartChangedHandler(adsk.core.InputChangedEventHandler):
                     self.part_refresh(occ, inp, part)
                 else:
                     print('not found')
-        except Exception:
+        except Exception as _e:
+            sentry_sdk.capture_exception(_e)
             error()
 
     def part_create(self, occ, cat, para_cat):
@@ -460,7 +480,7 @@ class ShowPartChangedHandler(adsk.core.InputChangedEventHandler):
             setText('text_part_notes', part.notes)
             setText('text_part_keywords', part.keywords)
             setText('text_part_category', part.getCategory().pathstring)
-            setText('text_part_stock', part.in_stock)
+            #setText('text_part_stock', part.in_stock)  # TODO fix
             inp.itemById('bool_part_virtual').value = part.virtual
             inp.itemById('bool_part_template').value = part.is_template
             inp.itemById('bool_part_assembly').value = part.assembly
@@ -469,7 +489,7 @@ class ShowPartChangedHandler(adsk.core.InputChangedEventHandler):
             inp.itemById('bool_part_purchaseable').value = part.purchaseable
             inp.itemById('bool_part_salable').value = part.salable
             setText('text_part_bom', part.name)
-            setText('text_part_suppliers', part.suppliers)
+            #setText('text_part_suppliers', part.suppliers)  # TODO fix
             message = '<div align="center">open <b>part %s</b> in <b>%s</b> <a href="%s">with this link</a>.</div>' % (part.pk, inv_api().server_details['instance'], inv_api().base_url[:-4] + part._url)
             inp.itemById('text_part_link').formattedText = message
             if part.link:
@@ -563,7 +583,8 @@ class SendShowPartCommandCreatedHandler(adsk.core.CommandCreatedEventHandler):
             inputs.itemById('grp_1').isVisible = False
             inputs.itemById('grp_2').isVisible = False
             inputs.itemById('grp_3').isVisible = False
-        except Exception:
+        except Exception as _e:
+            sentry_sdk.capture_exception(_e)
             error()
 
 
@@ -573,7 +594,8 @@ class MyCloseEventHandler(adsk.core.UserInterfaceGeneralEventHandler):
         """ generic function - called when handler called """
         try:
             pass  # TODO cleanup function needed?
-        except Exception:
+        except Exception as _e:
+            sentry_sdk.capture_exception(_e)
             error()
 
 
@@ -610,7 +632,8 @@ class HTMLEventHandler(adsk.core.HTMLEventHandler):
 
             else:
                 raise NotImplementedError('unknown message received from HTML')
-        except Exception:
+        except Exception as _e:
+            sentry_sdk.capture_exception(_e)
             error()
 # endregion
 
@@ -688,7 +711,8 @@ def run(context):
         CONFIG = config
         # with open('conf.ini', 'w') as configfile:
         #     config.write(configfile)
-    except Exception:
+    except Exception as _e:
+        sentry_sdk.capture_exception(_e)
         error()
 
 
@@ -709,5 +733,6 @@ def stop(context):
 
         if _APP_PANEL:
             _APP_PANEL.deleteMe()
-    except Exception:
+    except Exception as _e:
+        sentry_sdk.capture_exception(_e)
         error()
