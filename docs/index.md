@@ -18,6 +18,9 @@ Each component in Fusion360 has a unique identifier - this identifier can be sav
 The Addin renders a palette which displays all components in the currently open file. The user can load in if the Fusion360 components are linked to a InvenTree part.
 Components can also be added to InvenTree as parts or linked with parts.
 
+## Privacy
+
+This addin includes Sentry for error tracking as it still is highly experimental. The data collected will not be sold or combined with other datasets. 3rd parties outside of the dev-team will not get access to this data. Please contact privacy@mjmair DOT com for more information or inquiries.
 
 ### Installation
 
