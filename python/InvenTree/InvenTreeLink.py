@@ -355,7 +355,42 @@ class SendShowPartCommandExecuteHandler(adsk.core.CommandEventHandler):
     def notify(self, args):
         """ generic function - called when handler called """
         try:
-            print('clicked ok')
+            if _APP_UI.activeSelections.count == 1:
+                occ = adsk.fusion.Occurrence.cast(_APP_UI.activeSelections[0].entity)
+                inp = args.command.commandInputs
+                part = inventree_get_part(occ.component.id)
+
+                def getText(text_name, obj, item, data):
+                    # get value
+                    value = inp.itemById(text_name).text
+                    # compare
+                    if not getattr(obj, item) == value:
+                        data[item] = value
+
+                def getValue(text_name, obj, item, data):
+                    value = inp.itemById(text_name).value
+                    # compare
+                    if not getattr(obj, item) == value:
+                        data[item] = value
+
+                if part:
+                    _data = {}
+                    getText('text_part_name', part, 'name', _data)
+                    getText('text_part_ipn', part, 'IPN', _data)
+                    getText('text_part_description', part, 'description', _data)
+                    getText('text_part_notes', part, 'notes', _data)
+                    getText('text_part_keywords', part, 'keywords', _data)
+                    getValue('bool_part_virtual', part, 'virtual', _data)
+                    getValue('bool_part_template', part, 'is_template', _data)
+                    getValue('bool_part_assembly', part, 'assembly', _data)
+                    getValue('bool_part_component', part, 'component', _data)
+                    getValue('bool_part_trackable', part, 'trackable', _data)
+                    getValue('bool_part_purchaseable', part, 'purchaseable', _data)
+                    getValue('bool_part_salable', part, 'salable', _data)
+
+                    part.save(_data)
+                else:
+                    sentry_sdk.capture_message('part not found by reference', 'fatal')
         except Exception as _e:
             sentry_sdk.capture_exception(_e)
             error('cmd')
