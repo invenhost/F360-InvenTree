@@ -414,6 +414,8 @@ class ShowPartChangedHandler(adsk.core.InputChangedEventHandler):
                     part = self.part_create(occ, config_ref('category'), config_ref('part_id'))
                     # refresh display
                     self.part_refresh(occ, inp, part)
+                elif arg_id == 'APITabBar':
+                    pass
                 else:
                     print('not found')
         except Exception as _e:
