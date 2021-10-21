@@ -1,7 +1,7 @@
 # F360-InvenTree
 BOM-Management-Addin for Fusion360 + InvenTree created by Matthias Mair licensed under the MIT license.
 
-Would not be possible without some great other projects see the [acknowledgments](#acknowledgments)
+Would not be possible without some great other projects see the [acknowledgments](#acknowledgments).
 
 # TODO
 - [ ] GUI for settings
