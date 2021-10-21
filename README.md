@@ -1,10 +1,11 @@
 # F360-InvenTree
 BOM-Management-Addin for Fusion360 + InvenTree created by Matthias Mair licensed under the MIT license.
 
-This addin includes Sentry for error tracking as it still is highly experimental. The data collected will not be sold or combined with other datasets. 3rd parties outside of the dev-team will not get access to this data.  
-Please contact privacy@mjmair DOT com for more information or inquiries.
-
 Would not be possible without some great other projects see the [acknowledgments](#acknowledgments).
+
+# Privacy
+This addin includes Sentry for error tracking as it still is highly experimental. The data collected will not be sold or combined with other datasets. 3rd parties outside of the dev-team will not get access to this data.
+Please contact privacy@mjmair DOT com for more information or inquiries.
 
 # TODO
 - [ ] GUI for settings
