@@ -480,7 +480,7 @@ class ShowPartChangedHandler(adsk.core.InputChangedEventHandler):
             setText('text_part_notes', part.notes)
             setText('text_part_keywords', part.keywords)
             setText('text_part_category', part.getCategory().pathstring)
-            #setText('text_part_stock', part.in_stock)  # TODO fix
+            # setText('text_part_stock', part.in_stock)  # TODO fix
             inp.itemById('bool_part_virtual').value = part.virtual
             inp.itemById('bool_part_template').value = part.is_template
             inp.itemById('bool_part_assembly').value = part.assembly
@@ -489,8 +489,7 @@ class ShowPartChangedHandler(adsk.core.InputChangedEventHandler):
             inp.itemById('bool_part_purchaseable').value = part.purchaseable
             inp.itemById('bool_part_salable').value = part.salable
             setText('text_part_bom', part.name)
-            #setText('text_part_suppliers', part.suppliers)  # TODO fix
-            message = '<div align="center">open <b>part %s</b> in <b>%s</b> <a href="%s">with this link</a>.</div>' % (part.pk, inv_api().server_details['instance'], inv_api().base_url[:-4] + part._url)
+            # setText('text_part_suppliers', part.suppliers)  # TODO fix
             inp.itemById('text_part_link').formattedText = message
             if part.link:
                 inp.itemById('text_part_link_ext').formattedText = '<a href="%s">external link</a>' % part.link
@@ -574,9 +573,9 @@ class SendShowPartCommandCreatedHandler(adsk.core.CommandCreatedEventHandler):
 
             grpCmdInput3 = tab1ChildInputs.addGroupCommandInput('grp_3', 'Supply')
             grp3ChildInputs = grpCmdInput3.children
-            grp3ChildInputs.addTextBoxCommandInput('text_part_stock', 'stock', 'stock', 1, True)
+            # grp3ChildInputs.addTextBoxCommandInput('text_part_stock', 'stock', 'stock', 1, True)  # TODO fix
             grp3ChildInputs.addTextBoxCommandInput('text_part_bom', 'BOM items', 'Bom items', 1, True)
-            grp3ChildInputs.addTextBoxCommandInput('text_part_suppliers', 'suppliers', 'suppliers', 1, True)
+            # grp3ChildInputs.addTextBoxCommandInput('text_part_suppliers', 'suppliers', 'suppliers', 1, True)  # TODO fix
             grp3ChildInputs.addTextBoxCommandInput('text_part_link_ext', 'link', '', 1, True)
 
             # Turn off everything InvenTree
