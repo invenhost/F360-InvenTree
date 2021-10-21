@@ -525,6 +525,8 @@ class ShowPartChangedHandler(adsk.core.InputChangedEventHandler):
             inp.itemById('bool_part_salable').value = part.salable
             setText('text_part_bom', part.name)
             # setText('text_part_suppliers', part.suppliers)  # TODO fix
+            part_url = inv_api().base_url + part._url
+            message = '<div align="center">open <b>part %s</b> in <b>%s</b> <a href="%s">with this link</a>.</div>' % (part.pk, inv_api().server_details['instance'], part_url)
             inp.itemById('text_part_link').formattedText = message
             if part.link:
                 inp.itemById('text_part_link_ext').formattedText = '<a href="%s">external link</a>' % part.link
