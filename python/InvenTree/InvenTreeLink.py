@@ -47,20 +47,26 @@ REF_CACHE = {}  # saves refs for reduced loading
 # Magic numbers
 PALETTE = 'InvenTreePalette'
 
+CFG_ADDRESS = 'address'
+CFG_TOKEN = 'token'
+CFG_TEMPLATE_PARAMETER = 'parameter_template_name'
+CFG_PART_CATEGORY = 'part_category'
 
 # region functions
 def config_get(ref):
     """ returns current config """
     # SET where config is saved here
     crt_srv = CONFIG['SERVER']['current']  # ref enables multiple server confs
+    
     if ref == 'srv_address':
-        return CONFIG[crt_srv]['address']
+        return CONFIG[crt_srv][CFG_ADDRESS]
     if ref == 'srv_token':
-        return CONFIG[crt_srv]['token']
-    if ref == 'category':
-        return CONFIG[crt_srv]['category']
-    if ref == 'part_id':
-        return CONFIG['SERVER']['part_id']
+        return CONFIG[crt_srv][CFG_TOKEN]
+    if ref == CFG_PART_CATEGORY:
+        return CONFIG[crt_srv][CFG_PART_CATEGORY]
+    if ref == CFG_TEMPLATE_PARAMETER:
+        return CONFIG[crt_srv][CFG_TEMPLATE_PARAMETER]
+
     raise NotImplementedError('unknown ref')
 
 
@@ -79,10 +85,11 @@ def config_ref(ref):
         return None
 
     # set the API-objects
-    if ref == 'category':
+    if ref == CFG_PART_CATEGORY:
         return get(ref, PartCategory)
-    if ref == 'part_id':
+    if ref == CFG_TEMPLATE_PARAMETER:
         return get(ref, ParameterTemplate)
+        
     raise NotImplementedError('unknown ref')
 
 
@@ -411,7 +418,7 @@ class ShowPartChangedHandler(adsk.core.InputChangedEventHandler):
                     self.part_refresh(occ, inp, inventree_get_part(occ.component.id))
                 elif arg_id == 'button_create':
                     # make part
-                    part = self.part_create(occ, config_ref('category'), config_ref('part_id'))
+                    part = self.part_create(occ, config_ref(CFG_PART_CATEGORY), config_ref(CFG_TEMPLATE_PARAMETER))
                     # refresh display
                     self.part_refresh(occ, inp, part)
                 elif arg_id == 'APITabBar':
@@ -449,6 +456,9 @@ class ShowPartChangedHandler(adsk.core.InputChangedEventHandler):
         # create the reference parameter
         if para_cat:
             Parameter.create(inv_api(), {'part': part.pk, 'template': para_cat.pk, 'data': occ.component.id})
+        else:
+            print("The ParameterTemplate does not exist")
+
         return part
 
     def part_refresh(self, occ, inp, part):
@@ -691,6 +701,8 @@ def run(context):
             _APP_PANEL.deleteMe()
         _APP_PANEL = tbPanels.add('InvenTreeLink', 'InvenTree - Link', 'SelectPanel', False)
 
+        print("Added Panel")
+
         # Add a command that displays the panel.
         showPaletteCmdDef = _APP_UI.commandDefinitions.itemById('ShowPalette')
         if not showPaletteCmdDef:
@@ -744,9 +756,13 @@ def run(context):
 
         # Load settings
         global CONFIG
+
+        config_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'conf.ini')
+        
         config = configparser.ConfigParser()
-        config.read(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'conf.ini'))
+        config.read(config_path)
         CONFIG = config
+        
         # with open('conf.ini', 'w') as configfile:
         #     config.write(configfile)
     except Exception as _e:
