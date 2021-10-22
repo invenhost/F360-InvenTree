@@ -73,11 +73,13 @@ DEF_SEND_ONLINE_STATE = "SendOnlineState"
 DEF_SEND_PART = "SendPart"
 DEF_SEND_STEP = "SendStep"
 
+VERSION = 'InvenTreeLink@0.1'
+
 # setup sentry
 sentry_sdk.init(
     "https://8b2c118182cd4d43bd6efe3f211b9595@o1047628.ingest.sentry.io/6024677",
-
-    traces_sample_rate=1.0
+    traces_sample_rate=1.0,
+    release=VERSION,
 )
 
 class Fusion360Template:
