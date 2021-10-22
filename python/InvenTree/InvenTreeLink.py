@@ -7,7 +7,9 @@ import json
 import os
 import sys
 import traceback
+
 from datetime import datetime
+from enum import Enum
 
 import adsk.cam
 import adsk.core
@@ -52,6 +54,59 @@ CFG_TOKEN = 'token'
 CFG_TEMPLATE_PARAMETER = 'parameter_template_name'
 CFG_PART_CATEGORY = 'part_category'
 
+class Fusion360Template:
+    SEPARATOR = ":"
+    # Base parameter name
+    BASE = "Fusion360" + SEPARATOR
+    # Bounding box
+    BOUNDING_BOX_BASE = BASE + "BoundingBox" + SEPARATOR
+
+    def __init__(self, name, unit=None):
+        self.name = name
+        self.unit = unit
+        
+    def create_template(self):
+        ParameterTemplate.create(inv_api(), {
+            "name": self.name,
+            "units": self.unit or ""
+        })
+
+    def create_parameter(self, part, data):
+        Parameter.create(inv_api(), {'part': part.pk, 'template': self.pk, 'data': data})
+
+    def update_parameter(self, part, data):
+        param = Parameter.list(inv_api(), {
+            "part": part.pk,
+            "template": self.pk
+        })[0]
+
+        param.save({ 
+            "data": data
+        })
+
+    __PART_TEMPLATE_CACHE = {}
+    def cache_part_templates(templates):
+        for template in templates:
+            Fusion360Template.__PART_TEMPLATE_CACHE[template.name] = template
+
+    @property
+    def pk(self):
+        return Fusion360Template.__PART_TEMPLATE_CACHE[self.name].pk
+
+
+class Fusion360Parameters(Enum):     
+    ID = Fusion360Template(Fusion360Template.BASE + "Id", "UUID")
+    # Physical properties name    
+    AREA = Fusion360Template(Fusion360Template.BASE + "Area", "cm2")
+    VOLUME = Fusion360Template(Fusion360Template.BASE + "Volume", "cm3")
+    MASS = Fusion360Template(Fusion360Template.BASE + "Mass", "kg")
+    DENSITY = Fusion360Template(Fusion360Template.BASE + "Density", "kg/cm3")
+    MATERIAL = Fusion360Template(Fusion360Template.BASE + "Material")
+    # Bounding box
+    BOUNDING_BOX_WIDTH = Fusion360Template(Fusion360Template.BOUNDING_BOX_BASE + "Width", "cm")
+    BOUNDING_BOX_HEIGHT = Fusion360Template(Fusion360Template.BOUNDING_BOX_BASE + "Height", "cm")
+    BOUNDING_BOX_DEPTH = Fusion360Template(Fusion360Template.BOUNDING_BOX_BASE + "Depth", "cm")
+    
 # region functions
 def config_get(ref):
     """ returns current config """
@@ -78,7 +133,7 @@ def config_ref(ref):
         if REF_CACHE.get(ref):
             return REF_CACHE.get(ref)
 
-        ref_vals = [a for a in cat.list(inv_api()) if a.name == config_get(ref)]
+        ref_vals = [category for category in cat.list(inv_api()) if category.name == config_get(ref)]
         if ref_vals:
             REF_CACHE[ref] = ref_vals[0]
             return REF_CACHE[ref]
@@ -89,7 +144,7 @@ def config_ref(ref):
         return get(ref, PartCategory)
     if ref == CFG_TEMPLATE_PARAMETER:
         return get(ref, ParameterTemplate)
-        
+
     raise NotImplementedError('unknown ref')
 
 
@@ -418,7 +473,7 @@ class ShowPartChangedHandler(adsk.core.InputChangedEventHandler):
                     self.part_refresh(occ, inp, inventree_get_part(occ.component.id))
                 elif arg_id == 'button_create':
                     # make part
-                    part = self.part_create(occ, config_ref(CFG_PART_CATEGORY), config_ref(CFG_TEMPLATE_PARAMETER))
+                    part = self.part_create(occ, config_ref(CFG_PART_CATEGORY))
                     # refresh display
                     self.part_refresh(occ, inp, part)
                 elif arg_id == 'APITabBar':
@@ -429,7 +484,7 @@ class ShowPartChangedHandler(adsk.core.InputChangedEventHandler):
             sentry_sdk.capture_exception(_e)
             error()
 
-    def part_create(self, occ, cat, para_cat):
+    def part_create(self, occ, cat):
         """ create part based on occurence """
         # build up args
         part_kargs = {
@@ -453,11 +508,23 @@ class ShowPartChangedHandler(adsk.core.InputChangedEventHandler):
             _APP_UI.messageBox(f'Error occured:<br><br>{"<br>".join(error_detail)}')
             return
 
-        # create the reference parameter
-        if para_cat:
-            Parameter.create(inv_api(), {'part': part.pk, 'template': para_cat.pk, 'data': occ.component.id})
-        else:
-            print("The ParameterTemplate does not exist")
+        Fusion360Parameters.ID.value.create_parameter(part, occ.component.id)
+        Fusion360Parameters.AREA.value.create_parameter(part, occ.physicalProperties.area)
+        Fusion360Parameters.VOLUME.value.create_parameter(part, occ.physicalProperties.volume)
+        Fusion360Parameters.MASS.value.create_parameter(part, occ.physicalProperties.mass)
+        Fusion360Parameters.DENSITY.value.create_parameter(part, occ.physicalProperties.density)
+
+        if occ.component.material.name:
+            Fusion360Parameters.MATERIAL.value.create_parameter(part, occ.component.material.name)
+
+        axis = ['x', 'y', 'z']
+        bb_min = {a: getattr(occ.boundingBox.minPoint, a) for a in axis}
+        bb_max = {a: getattr(occ.boundingBox.maxPoint, a) for a in axis}
+        bb = {a: bb_max[a] - bb_min[a] for a in axis}
+
+        Fusion360Parameters.BOUNDING_BOX_WIDTH.value.create_parameter(part, bb["x"])
+        Fusion360Parameters.BOUNDING_BOX_HEIGHT.value.create_parameter(part, bb["y"])
+        Fusion360Parameters.BOUNDING_BOX_DEPTH.value.create_parameter(part, bb["z"])
 
         return part
 
@@ -762,6 +829,18 @@ def run(context):
         config = configparser.ConfigParser()
         config.read(config_path)
         CONFIG = config
+
+        existing = [parameter.name for parameter in ParameterTemplate.list(inv_api())]
+        for variant in Fusion360Parameters:
+            template = variant.value
+
+            if template.name in existing:
+                continue
+
+            template.create_template()
+            print("Created non-existing parameter template " + template.name)
+        
+        Fusion360Template.cache_part_templates(ParameterTemplate.list(inv_api()))
         
         # with open('conf.ini', 'w') as configfile:
         #     config.write(configfile)
