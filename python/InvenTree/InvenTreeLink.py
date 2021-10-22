@@ -42,16 +42,8 @@ from inventree.api import InvenTreeAPI
 from inventree.base import Parameter, ParameterTemplate
 from inventree.part import Part, PartCategory, PartAttachment
 
-# setup sentry
 import sentry_sdk
-sentry_sdk.init(
-    "https://8b2c118182cd4d43bd6efe3f211b9595@o1047628.ingest.sentry.io/6024677",
 
-    # Set traces_sample_rate to 1.0 to capture 100%
-    # of transactions for performance monitoring.
-    # We recommend adjusting this value in production.
-    traces_sample_rate=1.0
-)
 
 # global variables for handling the addin-aspects
 _APP = adsk.core.Application.cast(None)
@@ -80,6 +72,13 @@ DEF_SEND_BOM = "SendBom"
 DEF_SEND_ONLINE_STATE = "SendOnlineState"
 DEF_SEND_PART = "SendPart"
 DEF_SEND_STEP = "SendStep"
+
+# setup sentry
+sentry_sdk.init(
+    "https://8b2c118182cd4d43bd6efe3f211b9595@o1047628.ingest.sentry.io/6024677",
+
+    traces_sample_rate=1.0
+)
 
 class Fusion360Template:
     SEPARATOR = ":"
