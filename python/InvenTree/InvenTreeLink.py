@@ -21,6 +21,8 @@ from inventree.api import InvenTreeAPI
 from inventree.base import Parameter, ParameterTemplate
 from inventree.part import Part, PartCategory
 
+import tempfile #1
+
 # setup sentry
 import sentry_sdk
 sentry_sdk.init(
@@ -47,12 +49,18 @@ CONFIG = {}  # Config section
 REF_CACHE = {}  # saves refs for reduced loading
 
 # Magic numbers
-PALETTE = 'InvenTreePalette'
+ITEM_PALETTE = 'InvenTreePalette'
 
 CFG_ADDRESS = 'address'
 CFG_TOKEN = 'token'
 CFG_TEMPLATE_PARAMETER = 'parameter_template_name'
 CFG_PART_CATEGORY = 'part_category'
+
+DEF_SHOW_PALETTE = "ShowPalette"
+DEF_SEND_BOM = "SendBom"
+DEF_SEND_ONLINE_STATE = "SendOnlineState"
+DEF_SEND_PART = "SendPart"
+DEF_SEND_STEP = "SendStep"
 
 class Fusion360Template:
     SEPARATOR = ":"
@@ -300,9 +308,9 @@ class ShowPaletteCommandExecuteHandler(adsk.core.CommandEventHandler):
         """ generic function - called when handler called """
         try:
             # Create and display the palette.
-            palette = _APP_UI.palettes.itemById(PALETTE)
+            palette = _APP_UI.palettes.itemById(ITEM_PALETTE)
             if not palette:
-                palette = _APP_UI.palettes.add(PALETTE, 'InvenTreeLink', 'palette.html', True, True, True, 300, 200)
+                palette = _APP_UI.palettes.add(ITEM_PALETTE, 'InvenTreeLink', 'palette.html', True, True, True, 300, 200)
 
                 # Dock the palette to the right side of Fusion window.
                 palette.dockingState = adsk.core.PaletteDockingStates.PaletteDockStateRight
@@ -342,9 +350,9 @@ class SendBomCommandExecuteHandler(adsk.core.CommandEventHandler):
     def notify(self, args):
         """ generic function - called when handler called """
         try:
-            palette = _APP_UI.palettes.itemById(PALETTE)
+            palette = _APP_UI.palettes.itemById(ITEM_PALETTE)
             if palette:
-                palette.sendInfoToHTML('sendBom', '<br><br><br><div class="d-flex justify-content-center"><div class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div></div>')
+                palette.sendInfoToHTML(DEF_SEND_BOM, '<br><br><br><div class="d-flex justify-content-center"><div class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div></div>')
 
                 global BOM, BOM_HIR
                 start = datetime.now()
@@ -353,7 +361,7 @@ class SendBomCommandExecuteHandler(adsk.core.CommandEventHandler):
                 body = ''.join(['<tr><td>%s</td><td>%s</td></tr>' % (a['name'], a['instances']) for a in BOM])
                 table_c = '<div class="overflow-auto"><table class="table table-sm table-striped table-hover"><thead><tr><th scope="col">Name</th><th scope="col">Count</th></tr></thead><tbody>{body}</tbody></table></div>'.format(body=body)
 
-                palette.sendInfoToHTML('sendBom', '<p>{nbr} parts found in {time}</p>{table}'.format(nbr=len(BOM), table=table_c, time=datetime.now() - start))
+                palette.sendInfoToHTML(DEF_SEND_BOM, '<p>{nbr} parts found in {time}</p>{table}'.format(nbr=len(BOM), table=table_c, time=datetime.now() - start))
                 palette.sendInfoToHTML('sendTree', json.dumps(BOM_HIR))
         except Exception as _e:
             sentry_sdk.capture_exception(_e)
@@ -379,9 +387,9 @@ class SendBomOnlineCommandExecuteHandler(adsk.core.CommandEventHandler):
     def notify(self, args):
         """ generic function - called when handler called """
         try:
-            palette = _APP_UI.palettes.itemById(PALETTE)
+            palette = _APP_UI.palettes.itemById(ITEM_PALETTE)
             if palette:
-                palette.sendInfoToHTML('sendBom', '<br><br><br><div class="d-flex justify-content-center"><div class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div></div>')
+                palette.sendInfoToHTML(DEF_SEND_BOM, '<br><br><br><div class="d-flex justify-content-center"><div class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div></div>')
 
                 # Work with it
                 global BOM
@@ -392,7 +400,7 @@ class SendBomOnlineCommandExecuteHandler(adsk.core.CommandEventHandler):
                 body = ''.join(['<tr><td>%s</td><td>%s</td><td>%s</td></tr>' % (a['name'], a['instances'], a['status']) for a in BOM])
                 table = '<div class="overflow-auto"><table class="table table-sm table-striped table-hover"><thead><tr><th scope="col">Name</th><th scope="col">Count</th><th scope="col">Is InvenTree</th></tr></thead><tbody>{body}</tbody></table></div>'.format(body=body)
 
-                palette.sendInfoToHTML('sendBom', '{table}'.format(table=table))
+                palette.sendInfoToHTML(DEF_SEND_BOM, '{table}'.format(table=table))
         except Exception as _e:
             sentry_sdk.capture_exception(_e)
             error('cmd')
@@ -722,14 +730,14 @@ class HTMLEventHandler(adsk.core.HTMLEventHandler):
             htmlArgs = adsk.core.HTMLEventArgs.cast(args)
             data = json.loads(htmlArgs.data)
 
-            palette = _APP_UI.palettes.itemById(PALETTE)
+            palette = _APP_UI.palettes.itemById(ITEM_PALETTE)
             if htmlArgs.action == 'getBom':
                 if palette:
-                    _APP_UI.commandDefinitions.itemById('SendBom').execute()
+                    _APP_UI.commandDefinitions.itemById(DEF_SEND_BOM).execute()
 
             elif htmlArgs.action == 'getBomOnline':
                 if palette:
-                    _APP_UI.commandDefinitions.itemById('SendOnlineState').execute()
+                    _APP_UI.commandDefinitions.itemById(DEF_SEND_ONLINE_STATE).execute()
 
             elif htmlArgs.action == 'showPart':
                 selections = _APP_UI.activeSelections
@@ -743,13 +751,63 @@ class HTMLEventHandler(adsk.core.HTMLEventHandler):
                 entitiesByToken = design.findEntityByToken(token)
                 selections.add(entitiesByToken)  # TODO selection not working
                 print(data['id'])
-                _APP_UI.commandDefinitions.itemById('SendPart').execute()
+                _APP_UI.commandDefinitions.itemById(DEF_SEND_PART).execute()
 
             else:
                 raise NotImplementedError('unknown message received from HTML')
         except Exception as _e:
             sentry_sdk.capture_exception(_e)
             error()
+
+# Event handler for the commandCreated event.
+class SendStepCommandCreatedHandler(adsk.core.CommandCreatedEventHandler):
+    def notify(self, args):
+        """ generic function - called when handler called """
+        try:
+            command = args.command
+            onExecute = SendStepCommandExecuteHandler()
+            command.execute.add(onExecute)
+            _APP_HANDLERS.append(onExecute)
+        except Exception as _e:
+            sentry_sdk.capture_exception(_e)
+            error()
+            
+# Event handler for the commandExecuted event.
+class SendStepCommandExecuteHandler(adsk.core.CommandEventHandler):
+    def notify(self, args):
+        """ generic function - called when handler called """
+        try:
+            _APP_UI.messageBox("STEP FILE")
+
+            if _APP_UI.activeSelections.count == 1:
+                occ = adsk.fusion.Occurrence.cast(_APP_UI.activeSelections[0].entity)
+                
+
+                self._write_step("C:/{}.v{}".format(occ.component.name, occ.component.revisionId), occ.component)
+
+                _APP_UI.messageBox("Succesfully attached STEP file to {}".format(occ.component.name))
+
+            else:
+                _APP_UI.messageBox("Wrong number of entities selected: {}".format(_APP_UI.activeSelections.count))
+
+        except Exception as _e:
+            sentry_sdk.capture_exception(_e)
+            error('cmd')
+
+    def _write_step(self, output_path, component: adsk.fusion.Component):
+        file_path = output_path + ".stp"
+        if os.path.exists(file_path):
+            print("Step file \"{}\" already exists".format(file_path))
+            return
+
+        print("Writing step file \"{}\"".format(file_path))
+        export_manager = component.parentDesign.exportManager
+
+        options = export_manager.createSTEPExportOptions(output_path, component)
+        
+        if export_manager.execute(options) == False:
+            _APP_UI.messageBox("Failed to export STEP")
+
 # endregion
 
 
@@ -771,19 +829,19 @@ def run(context):
         print("Added Panel")
 
         # Add a command that displays the panel.
-        showPaletteCmdDef = _APP_UI.commandDefinitions.itemById('ShowPalette')
+        showPaletteCmdDef = _APP_UI.commandDefinitions.itemById(DEF_SHOW_PALETTE)
         if not showPaletteCmdDef:
-            showPaletteCmdDef = _APP_UI.commandDefinitions.addButtonDefinition('ShowPalette', 'Show BOM overview', 'Show the BOM overview palette.', 'resources\\ShowPalette')
+            showPaletteCmdDef = _APP_UI.commandDefinitions.addButtonDefinition(DEF_SHOW_PALETTE, 'Show BOM overview', 'Show the BOM overview palette.', 'resources\\ShowPalette')
 
             # Connect to Command Created event.
             onCommandCreated = ShowPaletteCommandCreatedHandler()
             showPaletteCmdDef.commandCreated.add(onCommandCreated)
             _APP_HANDLERS.append(onCommandCreated)
-            _APP_BTN_LST.append(['ShowPalette', showPaletteCmdDef])
+            _APP_BTN_LST.append([DEF_SHOW_PALETTE, showPaletteCmdDef])
 
-        SendBomCmdDef = _APP_UI.commandDefinitions.itemById('SendBom')
+        SendBomCmdDef = _APP_UI.commandDefinitions.itemById(DEF_SEND_BOM)
         if not SendBomCmdDef:
-            SendBomCmdDef = _APP_UI.commandDefinitions.addButtonDefinition('SendBom', 'Load BOM for assembly', 'Load the BOM for the assembly in the current file.', 'resources\\SendBom')
+            SendBomCmdDef = _APP_UI.commandDefinitions.addButtonDefinition(DEF_SEND_BOM, 'Load BOM for assembly', 'Load the BOM for the assembly in the current file.', 'resources\\SendBom')
             SendBomCmdDef.isPromotedByDefault = True
             SendBomCmdDef.isPromoted = True
 
@@ -791,21 +849,21 @@ def run(context):
             onCommandCreated = SendBomCommandCreatedHandler()
             SendBomCmdDef.commandCreated.add(onCommandCreated)
             _APP_HANDLERS.append(onCommandCreated)
-            _APP_BTN_LST.append(['SendBom', SendBomCmdDef])
+            _APP_BTN_LST.append([DEF_SEND_BOM, SendBomCmdDef])
 
-        SendBomOnlineCmdDef = _APP_UI.commandDefinitions.itemById('SendOnlineState')
+        SendBomOnlineCmdDef = _APP_UI.commandDefinitions.itemById(DEF_SEND_ONLINE_STATE)
         if not SendBomOnlineCmdDef:
-            SendBomOnlineCmdDef = _APP_UI.commandDefinitions.addButtonDefinition('SendOnlineState', 'Get InvenTree Information', 'Fetch the InvenTree information for all BOM-parts.', 'resources\\SendOnlineState')
+            SendBomOnlineCmdDef = _APP_UI.commandDefinitions.addButtonDefinition(DEF_SEND_ONLINE_STATE, 'Get InvenTree Information', 'Fetch the InvenTree information for all BOM-parts.', 'resources\\SendOnlineState')
 
             # Connect to Command Created event.
             onCommandCreated = SendBomOnlineCommandCreatedHandler()
             SendBomOnlineCmdDef.commandCreated.add(onCommandCreated)
             _APP_HANDLERS.append(onCommandCreated)
-            _APP_BTN_LST.append(['SendOnlineState', SendBomOnlineCmdDef])
+            _APP_BTN_LST.append([DEF_SEND_ONLINE_STATE, SendBomOnlineCmdDef])
 
-        SendShowPartCmdDef = _APP_UI.commandDefinitions.itemById('SendPart')
+        SendShowPartCmdDef = _APP_UI.commandDefinitions.itemById(DEF_SEND_PART)
         if not SendShowPartCmdDef:
-            SendShowPartCmdDef = _APP_UI.commandDefinitions.addButtonDefinition('SendPart', 'Show part details', 'Show the InvenTree part-details for the selected part.', 'resources\\SendPart')
+            SendShowPartCmdDef = _APP_UI.commandDefinitions.addButtonDefinition(DEF_SEND_PART, 'Show part details', 'Show the InvenTree part-details for the selected part.', 'resources\\SendPart')
             SendShowPartCmdDef.isPromotedByDefault = True
             SendShowPartCmdDef.isPromoted = True
 
@@ -813,7 +871,25 @@ def run(context):
             onCommandCreated = SendShowPartCommandCreatedHandler()
             SendShowPartCmdDef.commandCreated.add(onCommandCreated)
             _APP_HANDLERS.append(onCommandCreated)
-            _APP_BTN_LST.append(['SendPart', SendShowPartCmdDef])
+            _APP_BTN_LST.append([DEF_SEND_PART, SendShowPartCmdDef])
+
+        SendStepCmdDef = _APP_UI.commandDefinitions.itemById(DEF_SEND_STEP) 
+        if not SendStepCmdDef: 
+            SendStepCmdDef = _APP_UI.commandDefinitions.addButtonDefinition(
+                DEF_SEND_STEP, 
+                'Upload STEP to attachments', 
+                'Generates a STEP file and attaches it to a part.', 
+                'resources\\SendBom'
+            ) 
+
+            SendStepCmdDef.isPromotedByDefault = True 
+            SendStepCmdDef.isPromoted = True 
+        
+            # Connect to Command Created event. 
+            onCommandCreated = SendStepCommandCreatedHandler() 
+            SendStepCmdDef.commandCreated.add(onCommandCreated) 
+            _APP_HANDLERS.append(onCommandCreated) 
+            _APP_BTN_LST.append([DEF_SEND_STEP, SendStepCmdDef]) 
 
         # Add the command to the toolbar.
         for btn in _APP_BTN_LST:
@@ -854,7 +930,7 @@ def stop(context):
     global _APP_BTN_LST
     try:
         # Delete the palette created by this add-in.
-        palette = _APP_UI.palettes.itemById(PALETTE)
+        palette = _APP_UI.palettes.itemById(ITEM_PALETTE)
         if palette:
             palette.deleteMe()
 
