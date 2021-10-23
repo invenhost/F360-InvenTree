@@ -25,7 +25,7 @@ class SendBomCommand(apper.Fusion360CommandBase):
                 )
 
                 start = datetime.now()
-                config.BOM = functions._extract_bom()
+                config.BOM = functions.extract_bom()
                 config.BOM_HIR = functions.make_component_tree()
                 body = ''.join(['<tr><td>%s</td><td>%s</td></tr>' % (a['name'], a['instances']) for a in config.BOM])
                 table_c = '<div class="overflow-auto"><table class="table table-sm table-striped table-hover"><thead><tr><th scope="col">Name</th><th scope="col">Count</th></tr></thead><tbody>{body}</tbody></table></div>'.format(body=body)
