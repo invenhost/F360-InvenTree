@@ -198,7 +198,7 @@ def inventree_get_part(part_id):
 
 
 # region bom functions
-def _extract_bom():
+def extract_bom():
     """ returns bom """
     try:
         ao = apper.AppObjects()
