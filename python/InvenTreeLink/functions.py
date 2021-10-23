@@ -99,7 +99,7 @@ def inti_sentry():
     sentry_sdk.init(
         "https://8b2c118182cd4d43bd6efe3f211b9595@o1047628.ingest.sentry.io/6024677",
         traces_sample_rate=1.0,
-        release="0.0.1",
+        release="0.0.2",
     )
     config.app_tracking = sentry_sdk
 # end region
