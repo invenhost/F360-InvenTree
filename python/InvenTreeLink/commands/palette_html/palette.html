@@ -94,12 +94,12 @@
                         });
                     $('#tree_div').jstree(true).settings.core.data = data_in;
                     $('#tree_div').jstree(true).refresh();
-				}
-				else if (action == 'debugger') {
+                }
+                else if (action == 'debugger') {
                     debugger;
-				}
-				else {
-					return 'Unexpected command type: ' + action;
+                }
+                else {
+                    return 'Unexpected command type: ' + action;
                 }
             } catch (e) {
                 console.log(e);
