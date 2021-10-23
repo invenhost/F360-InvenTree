@@ -9,8 +9,6 @@ from enum import Enum
 from .apper import apper
 from . import config
 
-ao = apper.AppObjects()
-
 
 class Fusion360Template:
     SEPARATOR = ":"
@@ -203,6 +201,7 @@ def inventree_get_part(part_id):
 def _extract_bom():
     """ returns bom """
     try:
+        ao = apper.AppObjects()
         design = ao.product
         if not design:
             ao.ui.messageBox('No active design', 'Extract BOM')
@@ -265,6 +264,7 @@ def component_info(comp, parent='#', comp_set=False):
 
 def make_component_tree():
     """ generates the full tree """
+    ao = apper.AppObjects()
     root = ao.root_comp
 
     node_list = []

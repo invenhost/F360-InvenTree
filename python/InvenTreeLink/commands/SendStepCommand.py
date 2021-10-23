@@ -10,8 +10,6 @@ from .. import functions
 from .. import helpers
 from .. import config
 
-ao = apper.AppObjects()
-
 
 class SendStepCommand(apper.Fusion360CommandBase):
 
@@ -20,6 +18,8 @@ class SendStepCommand(apper.Fusion360CommandBase):
         from inventree.part import PartAttachment
 
         try:
+            ao = apper.AppObjects()
+
             ao.ui.messageBox("STEP FILE")
 
             if ao.ui.activeSelections.count == 1:
@@ -72,4 +72,5 @@ class SendStepCommand(apper.Fusion360CommandBase):
         options = export_manager.createSTEPExportOptions(output_path, component)
 
         if export_manager.execute(options) is False:
+            ao = apper.AppObjects()
             ao.ui.messageBox("Failed to export STEP")

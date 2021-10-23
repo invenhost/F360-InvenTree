@@ -7,9 +7,6 @@ from .apper import apper
 from . import config
 
 
-ao = apper.AppObjects()
-
-
 # https://stackoverflow.com/questions/295135/turn-a-string-into-a-valid-filename
 def slugify(value, allow_unicode=False):
     """
@@ -37,6 +34,7 @@ def error(typ_str=None):
         ret_msg = 'Failed:\n{}'.format(traceback.format_exc())
 
     # show message
+    ao = apper.AppObjects()
     if ao.ui:
         ao.ui.messageBox(ret_msg)
     else:
