@@ -79,10 +79,10 @@
 
         window.fusionJavaScriptHandler = {handle: function(action, data){
             try {
-                if (action == 'sendBom') {
+                if (action == 'SendBom') {
                     document.getElementById('BOM').innerHTML = data;
                 }
-                else if (action == 'sendTree') {
+                else if (action == 'SendTree') {
                     let data_in = JSON.parse(data);
                     $('#tree_div').jstree().on('changed.jstree', function (e, data) {
                             var i, j, r = [];

@@ -39,7 +39,7 @@ class SendBomCommand(apper.Fusion360CommandBase):
                     )
                 )
                 palette.sendInfoToHTML(
-                    'sendTree',
+                    'SendTree',
                     json.dumps(config.BOM_HIR)
                 )
         except Exception as _e:
