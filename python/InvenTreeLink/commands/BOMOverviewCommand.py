@@ -46,8 +46,9 @@ class BomOverviewPaletteShowCommand(apper.PaletteCommandBase):
                 selections.add(entitiesByToken)  # TODO selection not working
                 helpers.get_cmd(ao, config.DEF_SEND_PART).execute()
 
-            else:
-                raise NotImplementedError('unknown message received from HTML')
+            # TODO investigate ghost answers
+            # else:
+            #     raise NotImplementedError('unknown message received from HTML')
         except Exception as _e:
             config.app_tracking.capture_exception(_e)
             helpers.error()
