@@ -9,12 +9,11 @@ from .. import functions
 from .. import helpers
 from ..functions import Fusion360Parameters
 
-ao = apper.AppObjects()
-
 
 class ShowPartCommand(apper.Fusion360CommandBase):
     def on_input_changed(self, command, inputs, changed_input, input_values):
         try:
+            ao = apper.AppObjects()
             if ao.ui.activeSelections.count == 1:
                 occ = adsk.fusion.Occurrence.cast(ao.ui.activeSelections[0].entity)
                 arg_id = changed_input.id
@@ -38,6 +37,7 @@ class ShowPartCommand(apper.Fusion360CommandBase):
 
     def on_execute(self, command, inputs, args, input_values):
         try:
+            ao = apper.AppObjects()
             if ao.ui.activeSelections.count == 1:
                 occ = adsk.fusion.Occurrence.cast(ao.ui.activeSelections[0].entity)
                 inp = args.command.commandInputs
@@ -154,6 +154,8 @@ class ShowPartCommand(apper.Fusion360CommandBase):
         """ create part based on occurence """
         from inventree.part import Part
 
+        ao = apper.AppObjects()
+
         # build up args
         part_kargs = {
             'name': occ.component.name,
@@ -198,6 +200,7 @@ class ShowPartCommand(apper.Fusion360CommandBase):
 
     def part_refresh(self, occ, inp, part):
         """ updates PartInfo command-inputs with values for supplied parts """
+        ao = apper.AppObjects()
         unitsMgr = ao.f_units_manager
 
         def setText(text_name, item):
