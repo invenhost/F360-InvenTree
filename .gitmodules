@@ -1,0 +1,3 @@
+[submodule "apper"]
+	path = python/InvenTreeLinkl/apper
+	url = https://github.com/tapnair/apper
