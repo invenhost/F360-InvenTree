@@ -107,7 +107,10 @@ try:
     ui = app.userInterface
 
     functions.init_sentry()
-    functions.load_config()
+
+    if functions.load_config(ui) is False:
+        ui.messageBox("Unable to load config.", config.app_name)
+    
     functions.init_Fusion360()
 
 except:  # noqa: E722

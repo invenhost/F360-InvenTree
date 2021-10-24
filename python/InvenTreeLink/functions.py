@@ -106,11 +106,78 @@ def init_sentry():
 
 
 # region config
-def load_config():
+def load_config(ui: adsk.core.UserInterface):
     config_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'conf.ini')
-    config_dict = configparser.ConfigParser()
-    config_dict.read(config_path)
-    config.CONFIG = config_dict
+
+    if os.path.exists(config_path) is False:
+        TITLE =  "InventreeLink - Initialisation"
+
+        POSTFACE = (
+            "It seems InvenTreeLink was not yet properly configured.\n"
+            "Please provide the necessary information prompted by the\n"
+            "next couple of input boxes.\n"
+        )
+
+        def ask_user(line, context, default=""):
+            (value, cancelled) = ui.inputBox(
+                line, 
+                TITLE, 
+                default
+            )
+                
+            return value if not cancelled and value is not "" else None
+
+        ui.messageBox(POSTFACE)
+
+        address = ask_user(
+            "Please enter the server address of the InvenTree instance.", 
+            "Instance address"
+        )
+
+        if address is None:
+            ui.messageBox("Invalid address", TITLE)
+            return False               
+
+        token = ask_user(
+            "Please enter the user token:", 
+            "Authentication token", 
+        )
+
+        if token is None:
+            ui.messageBox("Invalid token", TITLE)
+            return False
+
+        part_category = ask_user(
+            "Please enter the part category's name were you would like the Part's to show up.", 
+            "Part Category",
+            "plugin-test"
+        )
+
+        if part_category is None:
+            ui.messageBox("Invalid part category", TITLE)
+            return False
+
+        config_text = (
+            "[SERVER]\n"
+            "current = default\n"
+            "\n"
+            "[default]\n"
+            f"{config.CFG_ADDRESS} = {address}\n"
+            f"{config.CFG_TOKEN} = {token}\n"
+            f"{config.CFG_PART_CATEGORY} = {part_category}\n"            
+        )
+
+        with open(config_path, "w") as f:
+            f.write(config_text)
+
+    try:
+        config_dict = configparser.ConfigParser()
+        config_dict.read(config_path)
+        config.CONFIG = config_dict
+    except: 
+        return False
+
+    return True
 
 
 def config_get(ref):
