@@ -106,8 +106,11 @@ try:
     app = adsk.core.Application.cast(adsk.core.Application.get())
     ui = app.userInterface
 
-    functions.inti_sentry()
-    functions.load_config()
+    functions.init_sentry()
+
+    if functions.load_config(ui) is False:
+        ui.messageBox("Unable to load config.", config.app_name)
+    
     functions.init_Fusion360()
 
 except:  # noqa: E722

@@ -21,12 +21,9 @@ DEF_SEND_ONLINE_STATE = "SendOnlineState"
 DEF_SEND_PART = "SendPart"
 DEF_SEND_STEP = "SendStep"
 
-
 CFG_ADDRESS = 'address'
 CFG_TOKEN = 'token'
-CFG_TEMPLATE_PARAMETER = 'parameter_template_name'
 CFG_PART_CATEGORY = 'part_category'
-
 
 # globals for reference
 BOM = []  # BOM-List
