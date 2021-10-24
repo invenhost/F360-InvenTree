@@ -93,7 +93,7 @@ def init_Fusion360():
 
 # region tracking
 @apper.lib_import(config.lib_path)
-def inti_sentry():
+def init_sentry():
     import sentry_sdk
 
     sentry_sdk.init(

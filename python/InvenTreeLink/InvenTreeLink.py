@@ -106,7 +106,7 @@ try:
     app = adsk.core.Application.cast(adsk.core.Application.get())
     ui = app.userInterface
 
-    functions.inti_sentry()
+    functions.init_sentry()
     functions.load_config()
     functions.init_Fusion360()
 
