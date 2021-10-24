@@ -118,7 +118,7 @@ def load_config(ui: adsk.core.UserInterface):
             "next couple of input boxes.\n"
         )
 
-        def ask_user(line, context, default=""):
+        def ask_user(line, default=""):
             (value, cancelled) = ui.inputBox(
                 line, 
                 TITLE, 
@@ -131,7 +131,6 @@ def load_config(ui: adsk.core.UserInterface):
 
         address = ask_user(
             "Please enter the server address of the InvenTree instance.", 
-            "Instance address"
         )
 
         if address is None:
@@ -139,8 +138,7 @@ def load_config(ui: adsk.core.UserInterface):
             return False               
 
         token = ask_user(
-            "Please enter the user token:", 
-            "Authentication token", 
+            "Please enter the user token:"
         )
 
         if token is None:
@@ -148,8 +146,7 @@ def load_config(ui: adsk.core.UserInterface):
             return False
 
         part_category = ask_user(
-            "Please enter the part category's name were you would like the Part's to show up.", 
-            "Part Category",
+            "Please enter the part category's name were you would like the Part's to show up.",
             "plugin-test"
         )
 
