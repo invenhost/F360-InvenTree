@@ -1,6 +1,6 @@
 ## F360-InvenTree Addin-documentation
 
-A BOM-Management-Addin for Fusion360 + InvenTree created by [Matthias Mair](https://mjmair.com) licensed under the [MIT license](https://github.com/matmair/F360-InvTree/blob/main/LICENSE).
+A BOM-Management-Addin for Fusion360 + InvenTree created by [Matthias Mair](https://mjmair.com) licensed under the [MIT license](https://github.com/invenhost/F360-InvTree/blob/main/LICENSE).
 
 {{site.data.alerts.note}}
 This code is very much not finished and just a few hundred lines.
