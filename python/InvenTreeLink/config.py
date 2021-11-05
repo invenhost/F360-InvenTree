@@ -13,13 +13,13 @@ lib_path = os.path.join(app_path, lib_dir, '')
 
 # Magic numbers
 ITEM_PALETTE = 'InvenTreePalette'
-APP_PANEL = 'InvenTreeLink'
 
 DEF_SHOW_PALETTE = "ShowPalette"
 DEF_SEND_BOM = "SendBom"
 DEF_SEND_ONLINE_STATE = "SendOnlineState"
 DEF_SEND_PART = "SendPart"
 DEF_SEND_STEP = "SendStep"
+DEF_IMPORT_PART = "ImportPart"
 
 CFG_ADDRESS = 'address'
 CFG_TOKEN = 'token'
@@ -31,3 +31,8 @@ BOM_HIR = []  # Hirarchical BOM
 INV_API = None  # API-connection
 CONFIG = {}  # Config section
 REF_CACHE = {}  # saves refs for reduced loading
+
+class ToolbarPanelID:
+    COMMANDS = "Commands"
+    INVENTREE_LINK = "Inventree Link"
+    PARTS = "Parts"

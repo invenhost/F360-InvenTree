@@ -17,6 +17,7 @@ try:
     from .commands.SendBomCommand import SendBomCommand
     from .commands.SendBomOnlineCommand import SendBomOnlineCommand
     from .commands.SendStepCommand import SendStepCommand
+    from .commands.ImportPartCommand import ImportPartCommand
 
     # Commands
     my_addin.add_command(
@@ -26,7 +27,7 @@ try:
             'cmd_description': 'Show the InvenTree part-details for the selected part',
             'cmd_id': config.DEF_SEND_PART,
             'workspace': 'FusionSolidEnvironment',
-            'toolbar_panel_id': 'Commands',
+            'toolbar_panel_id': config.ToolbarPanelID.COMMANDS,
             'cmd_resources': config.DEF_SEND_PART,
             'command_visible': True,
             'command_promoted': False,
@@ -40,7 +41,7 @@ try:
             'cmd_description': 'Generates a STEP file and attaches it to a part',
             'cmd_id': config.DEF_SEND_STEP,
             'workspace': 'FusionSolidEnvironment',
-            'toolbar_panel_id': 'Commands',
+            'toolbar_panel_id': config.ToolbarPanelID.COMMANDS,
             'cmd_resources': config.DEF_SEND_BOM,
             'command_visible': True,
             'command_promoted': False,
@@ -56,7 +57,7 @@ try:
             'cmd_description': 'Show the BOM overview palette',
             'cmd_id': config.DEF_SHOW_PALETTE,
             'workspace': 'FusionSolidEnvironment',
-            'toolbar_panel_id': config.APP_PANEL,
+            'toolbar_panel_id': config.ToolbarPanelID.INVENTREE_LINK,
             'cmd_resources': 'ShowPalette',
             'command_visible': True,
             'command_promoted': True,
@@ -80,7 +81,7 @@ try:
             'cmd_description': 'Load the BOM for the assembly in the current file',
             'cmd_id': config.DEF_SEND_BOM,
             'workspace': 'FusionSolidEnvironment',
-            'toolbar_panel_id': config.APP_PANEL,
+            'toolbar_panel_id': config.ToolbarPanelID.INVENTREE_LINK,
             'cmd_resources': config.DEF_SEND_BOM,
             'command_visible': True,
             'command_promoted': False,
@@ -95,7 +96,22 @@ try:
             'cmd_description': 'Fetch the InvenTree information for all BOM-parts',
             'cmd_id': config.DEF_SEND_ONLINE_STATE,
             'workspace': 'FusionSolidEnvironment',
-            'toolbar_panel_id': config.APP_PANEL,
+            'toolbar_panel_id': config.ToolbarPanelID.INVENTREE_LINK,
+            'cmd_resources': config.DEF_SEND_ONLINE_STATE,
+            'command_visible': True,
+            'command_promoted': False,
+            'palette_id': config.ITEM_PALETTE,
+        }
+    )
+
+    my_addin.add_command(
+        'Import',
+        ImportPartCommand,
+        {
+            'cmd_description': 'Import a Part as STL',
+            'cmd_id': config.DEF_IMPORT_PART,
+            'workspace': 'FusionSolidEnvironment',
+            'toolbar_panel_id': config.ToolbarPanelID.PARTS,
             'cmd_resources': config.DEF_SEND_ONLINE_STATE,
             'command_visible': True,
             'command_promoted': False,
