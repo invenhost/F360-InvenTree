@@ -15,8 +15,7 @@ try:
     from .commands.ShowPartCommand import ShowPartCommand
     from .commands.BOMOverviewCommand import BomOverviewPaletteShowCommand
     from .commands.GenerateBomCommand import GenerateBomCommand
-    from .commands.LoadInventreeBomCommand import LoadInventreeBomCommand
-    from .commands.SendStepCommand import SendStepCommand
+    from .commands.ImportStlCommand import ImportStlCommand
     from .commands.ImportPartCommand import ImportPartCommand
 
     # Commands
@@ -36,7 +35,7 @@ try:
 
     my_addin.add_command(
         'Upload STEP to attachments',
-        SendStepCommand,
+        ImportStlCommand,
         {
             'cmd_description': 'Generates a STEP file and attaches it to a part',
             'cmd_id': config.DEF_SEND_STEP,
@@ -83,21 +82,6 @@ try:
             'workspace': 'FusionSolidEnvironment',
             'toolbar_panel_id': config.ToolbarPanelID.INVENTREE_LINK,
             'cmd_resources': config.DEF_SEND_BOM,
-            'command_visible': True,
-            'command_promoted': False,
-            'palette_id': config.ITEM_PALETTE,
-        }
-    )
-
-    my_addin.add_command(
-        'Get InvenTree Information',
-        LoadInventreeBomCommand,
-        {
-            'cmd_description': 'Fetch the InvenTree information for all BOM-parts',
-            'cmd_id': config.DEF_SEND_ONLINE_STATE,
-            'workspace': 'FusionSolidEnvironment',
-            'toolbar_panel_id': config.ToolbarPanelID.INVENTREE_LINK,
-            'cmd_resources': config.DEF_SEND_ONLINE_STATE,
             'command_visible': True,
             'command_promoted': False,
             'palette_id': config.ITEM_PALETTE,

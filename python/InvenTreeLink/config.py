@@ -26,8 +26,6 @@ CFG_TOKEN = 'token'
 CFG_PART_CATEGORY = 'part_category'
 
 # globals for reference
-BOM = []  # BOM-List
-BOM_HIR = []  # Hirarchical BOM
 INV_API = None  # API-connection
 CONFIG = {}  # Config section
 REF_CACHE = {}  # saves refs for reduced loading

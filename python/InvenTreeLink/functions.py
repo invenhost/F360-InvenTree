@@ -302,6 +302,15 @@ def extract_bom():
                 node['linked'] = occ.isReferencedComponent
                 bom.append(node)
 
+        bom_parts = inventree_get_part([item['id'] for item in bom])
+        for item in bom:
+            part = bom_parts[item['id']]
+
+            if part is not False:
+                item['synced'] = True # "<span style='color: green;'> Synced </span>"
+            else:
+                item['synced'] = False # "<span style='color: red;'> Not synced </span>"
+
         # Display the BOM
         return bom
     except Exception as _e:
@@ -338,7 +347,6 @@ def make_component_tree():
     node_list = []
 
     root_node = component_info(root)
-    root_node["type"] = "4-root_component"
     node_list.append(root_node)
 
     if root.occurrences.count > 0:

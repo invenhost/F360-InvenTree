@@ -46,6 +46,9 @@ class BomOverviewPaletteShowCommand(apper.PaletteCommandBase):
                 selections.add(entitiesByToken)  # TODO selection not working
                 helpers.get_cmd(ao, config.DEF_SEND_PART).execute()
 
+            elif html_args.action == 'UploadBom':
+                ao.ui.messageBox("Uploading bom")
+
             # TODO investigate ghost answers
             # else:
             #     raise NotImplementedError('unknown message received from HTML')

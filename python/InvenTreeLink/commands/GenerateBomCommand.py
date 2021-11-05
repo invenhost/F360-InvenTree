@@ -13,6 +13,15 @@ from .. import functions
 class GenerateBomCommand(apper.Fusion360CommandBase):
     def on_execute(self, command: adsk.core.Command, command_inputs: adsk.core.CommandInputs, args, input_values):
         try:
+            ao = apper.AppObjects()
+            design = ao.product
+
+            if not design:
+                ao.ui.messageBox('No active design', 'Extract BOM')
+                return
+
+            root = design.rootComponent
+
             # Get Reference to Palette
             ao = apper.AppObjects()
             palette = ao.ui.palettes.itemById(config.ITEM_PALETTE)
@@ -25,22 +34,58 @@ class GenerateBomCommand(apper.Fusion360CommandBase):
                 )
 
                 start = datetime.now()
-                config.BOM = functions.extract_bom()
-                config.BOM_HIR = functions.make_component_tree()
-                body = ''.join(['<tr><td>%s</td><td>%s</td></tr>' % (a['name'], a['instances']) for a in config.BOM])
-                table_c = '<div class="overflow-auto"><table class="table table-sm table-striped table-hover"><thead><tr><th scope="col">Name</th><th scope="col">Count</th></tr></thead><tbody>{body}</tbody></table></div>'.format(body=body)
+
+                bom = functions.extract_bom()
+                unsynced_parts = [item for item in bom if item['synced'] is False]
+
+                component_tree = functions.make_component_tree()
+                
+                element_synced = "<span style='color: green'> Synced </span>"
+                element_not_synced = "<span style='color: red'> Not synced </span>"
+
+                header = ''.join((
+                    f"<h1>{root.name} </h1>"
+                ))
+
+                body = ''.join([
+                    ''.join((
+                        "<tr>"
+                        f"<td>{item['name']}</td>"
+                        f"<td>{item['instances']}</td>"
+                        f"<td>{element_synced if item['synced'] else element_not_synced}</td>"
+                        "</tr>" 
+                    ))
+                    for item in bom
+                ])
+
+                table_c = ''.join([
+                    "<div class='overflow-auto'>",
+                    "<table class='table table-sm table-striped table-hover'>",
+                    "<thead>",
+                    "<tr>",
+                    "<th scope='col'> Name </th>",
+                    "<th scope='col'> Count </th>",
+                    "<th scope='col'> Synced </th>",
+                    "</tr>",
+                    f"</thead><tbody>{body}</tbody></table></div>",
+                ])
+
+                complete = ''.join((
+                    header,
+                    f"<p> {len(bom)} parts found in {datetime.now() - start}</p>"
+                    f"{table_c}"
+                    "<button onclick='' class='btn btn-outline-secondary'> Sync All </button>" 
+                    "<button onclick='onClickUploadBom()' class='btn btn-outline-secondary'> Upload BOM </button>"    
+                ))
 
                 palette.sendInfoToHTML(
                     config.DEF_SEND_BOM,
-                    '<p>{count} parts found in {time}</p>{table}'.format(
-                        count=len(config.BOM),
-                        table=table_c,
-                        time=datetime.now() - start
-                    )
+                    complete
                 )
+
                 palette.sendInfoToHTML(
                     'SendTree',
-                    json.dumps(config.BOM_HIR)
+                    json.dumps(component_tree)
                 )
         except Exception as _e:
             config.app_tracking.capture_exception(_e)
