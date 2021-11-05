@@ -154,15 +154,15 @@ def load_config(ui: adsk.core.UserInterface):
             ui.messageBox("Invalid part category", TITLE)
             return False
 
-        config_text = (
-            "[SERVER]\n"
-            "current = default\n"
-            "\n"
-            "[default]\n"
-            f"{config.CFG_ADDRESS} = {address}\n"
-            f"{config.CFG_TOKEN} = {token}\n"
-            f"{config.CFG_PART_CATEGORY} = {part_category}\n"            
-        )
+        config_text = '\n'.join((
+            "[SERVER]",
+            "current = default",
+            "",
+            "[default]",
+            f"{config.CFG_ADDRESS} = {address}",
+            f"{config.CFG_TOKEN} = {token}",
+            f"{config.CFG_PART_CATEGORY} = {part_category}",         
+        ))
 
         with open(config_path, "w") as f:
             f.write(config_text)
