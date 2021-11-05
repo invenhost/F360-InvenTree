@@ -10,11 +10,13 @@ from .. import helpers
 from ..functions import Fusion360Parameters
 
 
-class ShowPartCommand(apper.Fusion360CommandBase):
+class EditPartCommand(apper.Fusion360CommandBase):
     def on_input_changed(self, command, inputs, changed_input, input_values):
         try:
             ao = apper.AppObjects()
-            if ao.ui.activeSelections.count == 1:
+            if ao.ui.activeSelections.count == 1:              
+                # TODO: Support Design's
+
                 occ = adsk.fusion.Occurrence.cast(ao.ui.activeSelections[0].entity)
                 arg_id = changed_input.id
                 inp = inputs.command.commandInputs
@@ -84,21 +86,21 @@ class ShowPartCommand(apper.Fusion360CommandBase):
             # Tabs
             tabCmdInput1 = inputs.addTabCommandInput('tab_1', 'Start')
             tab1ChildInputs = tabCmdInput1.children
-            tabCmdInput2 = inputs.addTabCommandInput('tab_2', 'Teil-Details')
-            tab2ChildInputs = tabCmdInput2.children
+            part_details_tab = inputs.addTabCommandInput('tab_2', 'Part Details')
+            part_details_children = part_details_tab.children
 
             # TextInputs for general information
-            tab2ChildInputs.addTextBoxCommandInput('text_id', 'id', 'id', 1, True)
-            tab2ChildInputs.addTextBoxCommandInput('text_name', 'name', 'name', 1, True)
-            tab2ChildInputs.addTextBoxCommandInput('text_description', 'description', 'description', 1, True)
-            tab2ChildInputs.addTextBoxCommandInput('text_opacity', 'opacity', 'opacity', 1, True)
-            tab2ChildInputs.addTextBoxCommandInput('text_partNumber', 'partNumber', 'partNumber', 1, True)
-            tab2ChildInputs.addTextBoxCommandInput('text_area', 'area', 'area', 1, True)
-            tab2ChildInputs.addTextBoxCommandInput('text_volume', 'volume', 'volume', 1, True)
-            tab2ChildInputs.addTextBoxCommandInput('text_mass', 'mass', 'mass', 1, True)
-            tab2ChildInputs.addTextBoxCommandInput('text_density', 'density', 'density', 1, True)
-            tab2ChildInputs.addTextBoxCommandInput('text_material', 'material', 'material', 1, True)
-            tableInput = tab2ChildInputs.addTableCommandInput('table', 'Table', 4, '1:1:1:1')
+            part_details_children.addTextBoxCommandInput('text_id', 'ID', '', 1, True)
+            part_details_children.addTextBoxCommandInput('text_name', 'Name', '', 1, True)
+            part_details_children.addTextBoxCommandInput('text_description', 'Description', '', 1, True)
+            part_details_children.addTextBoxCommandInput('text_opacity', 'Opacity', '', 1, True)
+            part_details_children.addTextBoxCommandInput('text_partNumber', 'Part Number', '', 1, True)
+            part_details_children.addTextBoxCommandInput('text_area', 'Area', '', 1, True)
+            part_details_children.addTextBoxCommandInput('text_volume', 'Volume', '', 1, True)
+            part_details_children.addTextBoxCommandInput('text_mass', 'Mass', '', 1, True)
+            part_details_children.addTextBoxCommandInput('text_density', 'Density', '', 1, True)
+            part_details_children.addTextBoxCommandInput('text_material', 'Material', '', 1, True)
+            tableInput = part_details_children.addTableCommandInput('table', 'Table', 4, '1:1:1:1')
             tableInput.isFullWidth = True
             tableInput.tablePresentationStyle = 2
 
@@ -107,31 +109,31 @@ class ShowPartCommand(apper.Fusion360CommandBase):
             selectInput.addSelectionFilter('Occurrences')
             selectInput.setSelectionLimits(1, 1)
             # Buttons
-            tab1ChildInputs.addBoolValueInput('button_create', 'create part', False, 'commands/resources/ButtonCreate', True)
-            tab1ChildInputs.addBoolValueInput('button_refresh', 'refresh Information', False, 'commands/resources/SendOnlineState', True)
+            tab1ChildInputs.addBoolValueInput('button_create', 'Create part', False, 'commands/resources/ButtonCreate', True)
+            tab1ChildInputs.addBoolValueInput('button_refresh', 'Refresh', False, 'commands/resources/SendOnlineState', True)
 
             # TextInputs for InvenTree
             grpCmdInput1 = tab1ChildInputs.addGroupCommandInput('grp_1', 'General')
             grp1ChildInputs = grpCmdInput1.children
             # img = tab1ChildInputs.addImageCommandInput('text_part_image', 'image', 'blank_image.png')
             # img.isVisible = False  # TODO implement
-            grp1ChildInputs.addTextBoxCommandInput('text_part_name', 'name', 'name', 1, False)
-            grp1ChildInputs.addTextBoxCommandInput('text_part_ipn', 'IPN', 'IPN', 1, False)
-            grp1ChildInputs.addTextBoxCommandInput('text_part_description', 'description', 'description', 1, False)
-            grp1ChildInputs.addTextBoxCommandInput('text_part_notes', 'note', 'note', 2, False)
-            grp1ChildInputs.addTextBoxCommandInput('text_part_keywords', 'keywords', 'keywords', 1, False)
-            grp1ChildInputs.addTextBoxCommandInput('text_part_category', 'category', 'category', 1, True)
+            grp1ChildInputs.addTextBoxCommandInput('text_part_name', 'Name', '', 1, False)
+            grp1ChildInputs.addTextBoxCommandInput('text_part_ipn', 'IPN', '', 1, False)
+            grp1ChildInputs.addTextBoxCommandInput('text_part_description', 'Description', '', 1, False)
+            grp1ChildInputs.addTextBoxCommandInput('text_part_notes', 'Note', '', 2, False)
+            grp1ChildInputs.addTextBoxCommandInput('text_part_keywords', 'Keywords', '', 1, False)
+            grp1ChildInputs.addTextBoxCommandInput('text_part_category', 'Category', 'category', 1, True)
             grp1ChildInputs.addTextBoxCommandInput('text_part_link', '', 'linktext', 1, True)
 
             grpCmdInput2 = tab1ChildInputs.addGroupCommandInput('grp_2', 'Settings')
             grp2ChildInputs = grpCmdInput2.children
-            grp2ChildInputs.addBoolValueInput('bool_part_virtual', 'virtual', True)
-            grp2ChildInputs.addBoolValueInput('bool_part_template', 'template', True)
-            grp2ChildInputs.addBoolValueInput('bool_part_assembly', 'assembly', True)
-            grp2ChildInputs.addBoolValueInput('bool_part_component', 'component', True)
-            grp2ChildInputs.addBoolValueInput('bool_part_trackable', 'trackable', True)
-            grp2ChildInputs.addBoolValueInput('bool_part_purchaseable', 'purchaseable', True)
-            grp2ChildInputs.addBoolValueInput('bool_part_salable', 'salable', True)
+            grp2ChildInputs.addBoolValueInput('bool_part_virtual', 'Virtual', True)
+            grp2ChildInputs.addBoolValueInput('bool_part_template', 'Template', True)
+            grp2ChildInputs.addBoolValueInput('bool_part_assembly', 'Assembly', True)
+            grp2ChildInputs.addBoolValueInput('bool_part_component', 'Component', True)
+            grp2ChildInputs.addBoolValueInput('bool_part_trackable', 'Trackable', True)
+            grp2ChildInputs.addBoolValueInput('bool_part_purchaseable', 'Purchasable', True)
+            grp2ChildInputs.addBoolValueInput('bool_part_salable', 'Salable', True)
 
             grpCmdInput3 = tab1ChildInputs.addGroupCommandInput('grp_3', 'Supply')
             grp3ChildInputs = grpCmdInput3.children

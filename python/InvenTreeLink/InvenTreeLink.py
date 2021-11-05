@@ -12,41 +12,13 @@ try:
     my_addin = apper.FusionApp(config.app_name, config.company_name, False)
     my_addin.root_path = config.app_path
 
-    from .commands.ShowPartCommand import ShowPartCommand
+    from .commands.EditPartCommand import EditPartCommand
     from .commands.BOMOverviewCommand import BomOverviewPaletteShowCommand
     from .commands.GenerateBomCommand import GenerateBomCommand
     from .commands.ImportStlCommand import ImportStlCommand
     from .commands.ImportPartCommand import ImportPartCommand
 
     # Commands
-    my_addin.add_command(
-        'Show part details',
-        ShowPartCommand,
-        {
-            'cmd_description': 'Show the InvenTree part-details for the selected part',
-            'cmd_id': config.DEF_SEND_PART,
-            'workspace': 'FusionSolidEnvironment',
-            'toolbar_panel_id': config.ToolbarPanelID.COMMANDS,
-            'cmd_resources': config.DEF_SEND_PART,
-            'command_visible': True,
-            'command_promoted': False,
-        }
-    )
-
-    my_addin.add_command(
-        'Upload STEP to attachments',
-        ImportStlCommand,
-        {
-            'cmd_description': 'Generates a STEP file and attaches it to a part',
-            'cmd_id': config.DEF_SEND_STEP,
-            'workspace': 'FusionSolidEnvironment',
-            'toolbar_panel_id': config.ToolbarPanelID.COMMANDS,
-            'cmd_resources': config.DEF_SEND_BOM,
-            'command_visible': True,
-            'command_promoted': False,
-            'palette_id': config.ITEM_PALETTE,
-        }
-    )
 
     # Palette
     my_addin.add_command(
@@ -89,14 +61,43 @@ try:
     )
 
     my_addin.add_command(
-        'Import',
+        'Edit Part',
+        EditPartCommand,
+        {
+            'cmd_description': 'Show the InvenTree part-details for the selected part',
+            'cmd_id': config.DEF_SEND_PART,
+            'workspace': 'FusionSolidEnvironment',
+            'toolbar_panel_id': config.ToolbarPanelID.PART,
+            'cmd_resources': config.DEF_SEND_PART,
+            'command_visible': True,
+            'command_promoted': False,
+        }
+    )
+
+    my_addin.add_command(
+        'Import Part',
         ImportPartCommand,
         {
             'cmd_description': 'Import a Part as STL',
             'cmd_id': config.DEF_IMPORT_PART,
             'workspace': 'FusionSolidEnvironment',
-            'toolbar_panel_id': config.ToolbarPanelID.PARTS,
-            'cmd_resources': config.DEF_SEND_ONLINE_STATE,
+            'toolbar_panel_id': config.ToolbarPanelID.PART,
+            'cmd_resources': config.DEF_SEND_BOM,
+            'command_visible': True,
+            'command_promoted': False,
+            'palette_id': config.ITEM_PALETTE,
+        }
+    )
+
+    my_addin.add_command(
+        'Export STEP',
+        ImportStlCommand,
+        {
+            'cmd_description': 'Generates a STEP file and attaches it to a part',
+            'cmd_id': config.DEF_SEND_STEP,
+            'workspace': 'FusionSolidEnvironment',
+            'toolbar_panel_id': config.ToolbarPanelID.PART,
+            'cmd_resources': 'ShowPalette',
             'command_visible': True,
             'command_promoted': False,
             'palette_id': config.ITEM_PALETTE,

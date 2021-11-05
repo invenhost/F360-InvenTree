@@ -33,4 +33,4 @@ REF_CACHE = {}  # saves refs for reduced loading
 class ToolbarPanelID:
     COMMANDS = "Commands"
     INVENTREE_LINK = "Inventree Link"
-    PARTS = "Parts"
+    PART = "Part"
