@@ -6,8 +6,8 @@ from ..apper import apper
 from .. import config
 from .. import functions
 
-
-class SendBomOnlineCommand(apper.Fusion360CommandBase):
+# Loads the Bill of Materials that Inventree has of this Part.
+class LoadInventreeBomCommand(apper.Fusion360CommandBase):
     def on_execute(self, command: adsk.core.Command, command_inputs: adsk.core.CommandInputs, args, input_values):
         try:
             # Get Reference to Palette
@@ -22,14 +22,22 @@ class SendBomOnlineCommand(apper.Fusion360CommandBase):
                 )
 
                 # Work with it
-                inv_status = functions.inventree_get_part([a['id'] for a in config.BOM])
-                for a in config.BOM:
-                    a['status'] = inv_status[a['id']]
+                bom_parts = functions.inventree_get_part([item['id'] for item in config.BOM])
+                for item in config.BOM:
+                    part = bom_parts[item['id']]
+
+                    if part is not False:
+                        item['status'] = "<span style='color: green;'> Synced </span>"
+                    else:
+                        item['status'] = "<span style='color: red;'>Not synced</span>"
 
                 body = ''.join(
-                    ['<tr><td>%s</td><td>%s</td><td>%s</td></tr>' % (a['name'], a['instances'], a['status']) for a in config.BOM]
+                    [
+                        f"<tr> <td> {item['name']} </td> <td> {item['instances']} </td> <td> {item['status']} </td> </tr>"
+                        for item in config.BOM
+                    ]
                 )
-                table = '<div class="overflow-auto"><table class="table table-sm table-striped table-hover"><thead><tr><th scope="col">Name</th><th scope="col">Count</th><th scope="col">Is InvenTree</th></tr></thead><tbody>{body}</tbody></table></div>'.format(body=body)
+                table = '<div class="overflow-auto"><table class="table table-sm table-striped table-hover"><thead><tr><th scope="col">Name</th><th scope="col">Count</th><th scope="col">Status</th></tr></thead><tbody>{body}</tbody></table></div>'.format(body=body)
 
                 palette.sendInfoToHTML(
                     config.DEF_SEND_BOM,

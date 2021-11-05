@@ -14,8 +14,8 @@ try:
 
     from .commands.ShowPartCommand import ShowPartCommand
     from .commands.BOMOverviewCommand import BomOverviewPaletteShowCommand
-    from .commands.SendBomCommand import SendBomCommand
-    from .commands.SendBomOnlineCommand import SendBomOnlineCommand
+    from .commands.GenerateBomCommand import GenerateBomCommand
+    from .commands.LoadInventreeBomCommand import LoadInventreeBomCommand
     from .commands.SendStepCommand import SendStepCommand
     from .commands.ImportPartCommand import ImportPartCommand
 
@@ -76,7 +76,7 @@ try:
     # Commands that need the palette
     my_addin.add_command(
         'Load BOM for assembly',
-        SendBomCommand,
+        GenerateBomCommand,
         {
             'cmd_description': 'Load the BOM for the assembly in the current file',
             'cmd_id': config.DEF_SEND_BOM,
@@ -91,7 +91,7 @@ try:
 
     my_addin.add_command(
         'Get InvenTree Information',
-        SendBomOnlineCommand,
+        LoadInventreeBomCommand,
         {
             'cmd_description': 'Fetch the InvenTree information for all BOM-parts',
             'cmd_id': config.DEF_SEND_ONLINE_STATE,

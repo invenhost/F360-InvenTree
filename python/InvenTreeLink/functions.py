@@ -278,15 +278,17 @@ def extract_bom():
         bom = []
         for occ in occs:
             comp = occ.component
-            jj = 0
-            for bomI in bom:
-                if bomI['component'] == comp:
-                    # Increment the instance count of the existing row.
-                    bomI['instances'] += 1
-                    break
-                jj += 1
+            already_exists = False
 
-            if jj == len(bom):
+            # Go through the BOM for items previously added 
+            for item in bom:
+                if item['component'] == comp:
+                    # Increment the instance count of the existing row.
+                    item['instances'] += 1
+                    already_exists = True
+                    break
+
+            if already_exists is False:
                 # Gather any BOM worthy values from the component
                 volume = 0
                 bodies = comp.bRepBodies
@@ -311,18 +313,20 @@ def component_info(comp, parent='#', comp_set=False):
     """ returns a node element """
     node = {
         'name': comp.name,
-        'nbr': comp.partNumber,
+        'IPN': comp.partNumber,
         'id': comp.id,
         'revision-id': comp.revisionId,
         'instances': 1,
         'parent': parent,
     }
+
     if comp_set:
         node['component'] = comp
     else:
         node['state'] = {'opened': True, 'checkbox_disabled': False}
         node["type"] = "4-root_component"
         node["text"] = comp.name
+
     return node
 
 

@@ -9,8 +9,8 @@ from ..apper import apper
 from .. import config
 from .. import functions
 
-
-class SendBomCommand(apper.Fusion360CommandBase):
+# Loads the Bill of Materials from the current Fusion360 design.
+class GenerateBomCommand(apper.Fusion360CommandBase):
     def on_execute(self, command: adsk.core.Command, command_inputs: adsk.core.CommandInputs, args, input_values):
         try:
             # Get Reference to Palette
@@ -32,8 +32,8 @@ class SendBomCommand(apper.Fusion360CommandBase):
 
                 palette.sendInfoToHTML(
                     config.DEF_SEND_BOM,
-                    '<p>{nbr} parts found in {time}</p>{table}'.format(
-                        nbr=len(config.BOM),
+                    '<p>{count} parts found in {time}</p>{table}'.format(
+                        count=len(config.BOM),
                         table=table_c,
                         time=datetime.now() - start
                     )
