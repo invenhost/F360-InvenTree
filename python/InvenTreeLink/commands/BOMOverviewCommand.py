@@ -8,9 +8,6 @@ from ..apper import apper
 from .. import config
 from .. import helpers
 from .. import functions
-
-from inventree.part import Part
-from inventree.part import BomItem
         
 from ..functions import inv_api, inventree_get_part
 
@@ -28,6 +25,9 @@ class BomOverviewPaletteShowCommand(apper.PaletteCommandBase):
     def on_html_event(self, html_args: adsk.core.HTMLEventArgs):
         data = json.loads(html_args.data)
         
+        from inventree.part import Part
+        from inventree.part import BomItem
+
         try:
             ao = apper.AppObjects()
             palette = ao.ui.palettes.itemById(config.ITEM_PALETTE)
@@ -67,7 +67,6 @@ class BomOverviewPaletteShowCommand(apper.PaletteCommandBase):
                             return 
 
                     elif len(item_list) == 1:
-                        ao.ui.messageBox(f"Part was not linked yet but found Part for {item_list[0].IPN} | {item_list[0].name} so linking it.", "Sync All")
                         root_part = item_list[0]
 
                     elif len(item_list) > 1:
@@ -99,7 +98,6 @@ class BomOverviewPaletteShowCommand(apper.PaletteCommandBase):
                                 return 
                                 
                         elif len(item_list) == 1:
-                            ao.ui.messageBox(f"Part was not linked yet but found Part for {item_list[0].ipn} | {item_list[0].name} so linking it.", "Sync All")
                             # Just link it
                             part = item_list[0]
 
@@ -119,9 +117,7 @@ class BomOverviewPaletteShowCommand(apper.PaletteCommandBase):
                     command = helpers.get_cmd(ao, config.DEF_SEND_BOM)
                     command.execute()
 
-            elif html_args.action == 'UploadBom':
-                ao.ui.messageBox("Uploading bom")
-                
+            elif html_args.action == 'UploadBom':                
                 root = ao.product.rootComponent
                 root_part = functions.inventree_get_part(root.id)
 
@@ -187,3 +183,37 @@ def propose_create_f360_part(ao, component: adsk.fusion.Component, buttons):
     )
 
     return ao.ui.messageBox(text, "Sync All", buttons, 1)
+
+def sync_all(ao, root: adsk.fusion.Component):
+    from inventree.part import Part
+    from inventree.part import BomItem
+
+    root_part = inventree_get_part(root.id)
+
+    if root_part == False:      
+        item_list = Part.list(inv_api(), IPN=root.partNumber)
+        if len(item_list) == 0:
+            result = propose_create_f360_part(ao, root, 3)
+
+            if result == adsk.core.DialogResults.DialogYes:
+                root_part = helpers.create_f360_part(root, functions.config_ref(config.CFG_PART_CATEGORY))               
+            elif result == adsk.core.DialogResults.DialogNo:
+                return 
+
+        elif len(item_list) == 1:
+            root_part = item_list[0]
+
+        elif len(item_list) > 1:
+            ao.ui.messageBox(f"More than one item found with IPN <b>{root.partNumber}. Please resolve this in InvenTree for now.", "Sync All")
+            return
+    
+    root_part.save(data={ 
+        'name': root.name,
+        'IPN': root.partNumber,
+        'description': root.description if root.description else 'None'
+    })
+    helpers.write_f360_parameters(root_part, root)      
+
+    for occurrence in root.occurrences:
+        if occurrence.component:
+            sync_all(occurrence.component)

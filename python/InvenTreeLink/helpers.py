@@ -87,20 +87,20 @@ def write_f360_parameters(part, component: adsk.fusion.Component):
 
     physicalProperties = component.physicalProperties
 
-    Fusion360Parameters.ID.value.create_parameter(part, component.id)
-    Fusion360Parameters.AREA.value.create_parameter(part, physicalProperties.area)
-    Fusion360Parameters.VOLUME.value.create_parameter(part, physicalProperties.volume)
-    Fusion360Parameters.MASS.value.create_parameter(part, physicalProperties.mass)
-    Fusion360Parameters.DENSITY.value.create_parameter(part, physicalProperties.density)
+    Fusion360Parameters.ID.value.set(part, component.id)
+    Fusion360Parameters.AREA.value.set(part, physicalProperties.area)
+    Fusion360Parameters.VOLUME.value.set(part, physicalProperties.volume)
+    Fusion360Parameters.MASS.value.set(part, physicalProperties.mass)
+    Fusion360Parameters.DENSITY.value.set(part, physicalProperties.density)
 
     if component.material and component.material.name:
-        Fusion360Parameters.MATERIAL.value.create_parameter(part, component.material.name)
+        Fusion360Parameters.MATERIAL.value.set(part, component.material.name)
 
     axis = ['x', 'y', 'z']
     bb_min = {a: getattr(component.boundingBox.minPoint, a) for a in axis}
     bb_max = {a: getattr(component.boundingBox.maxPoint, a) for a in axis}
     bb = {a: bb_max[a] - bb_min[a] for a in axis}
 
-    Fusion360Parameters.BOUNDING_BOX_WIDTH.value.create_parameter(part, bb["x"])
-    Fusion360Parameters.BOUNDING_BOX_HEIGHT.value.create_parameter(part, bb["y"])
-    Fusion360Parameters.BOUNDING_BOX_DEPTH.value.create_parameter(part, bb["z"])
+    Fusion360Parameters.BOUNDING_BOX_WIDTH.value.set(part, bb["x"])
+    Fusion360Parameters.BOUNDING_BOX_HEIGHT.value.set(part, bb["y"])
+    Fusion360Parameters.BOUNDING_BOX_DEPTH.value.set(part, bb["z"])

@@ -31,23 +31,25 @@ class Fusion360Template:
         })
 
     @apper.lib_import(config.lib_path)
-    def create_parameter(self, part, data):
+    def set(self, part, data):
         from inventree.base import Parameter
+        
+        params = Parameter.list(inv_api(), 
+            part=part.pk,
+            template=self.pk
+        )
 
-        Parameter.create(inv_api(), {'part': part.pk, 'template': self.pk, 'data': data})
+        if len(params) == 0:    
+            Parameter.create(inv_api(), {'part': part.pk, 'template': self.pk, 'data': data})
+        else:
+            param = params[0]
+            param.save({
+                "data": data
+            })
 
     @apper.lib_import(config.lib_path)
-    def update_parameter(self, part, data):
-        from inventree.base import Parameter
-
-        param = Parameter.list(inv_api(), {
-            "part": part.pk,
-            "template": self.pk
-        })[0]
-
-        param.save({
-            "data": data
-        })
+    def has_parameter(self, part):
+        test = ""  
 
     __PART_TEMPLATE_CACHE = {}
 
