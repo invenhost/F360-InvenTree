@@ -54,89 +54,12 @@ class BomOverviewPaletteShowCommand(apper.PaletteCommandBase):
             elif html_args.action == 'SyncAll':
                 
                 root = ao.product.rootComponent
-                root_part = inventree_get_part(root.id)
-
-                if root_part == False:      
-                    item_list = Part.list(inv_api(), IPN=root.partNumber)
-                    if len(item_list) == 0:
-                        result = propose_create_f360_part(ao, root, 3)
-
-                        if result == adsk.core.DialogResults.DialogYes:
-                            root_part = helpers.create_f360_part(root, functions.config_ref(config.CFG_PART_CATEGORY))               
-                        elif result == adsk.core.DialogResults.DialogNo:
-                            return 
-
-                    elif len(item_list) == 1:
-                        root_part = item_list[0]
-
-                    elif len(item_list) > 1:
-                        ao.ui.messageBox(f"More than one item found with IPN <b>{root.partNumber}. Please resolve this in InvenTree for now.", "Sync All")
-                        return
-                
-                root_part.save(data={ 
-                    'name': root.name,
-                    'IPN': root.partNumber,
-                    'description': root.description if root.description else 'None'
-                })
-                helpers.write_f360_parameters(root_part, root)  
-                
-                bom = functions.extract_bom()
-                for item in bom:
-                    part = item['part']
-
-                    if part == False:
-                        component = item['occurence'].component
-
-                        item_list = Part.list(functions.inv_api(), IPN=component.partNumber)
-                        if len(item_list) == 0:
-                            result = propose_create_f360_part(ao, component, 4)                            
-                            if result == adsk.core.DialogResults.DialogYes:
-                                part = helpers.create_f360_part(component, functions.config_ref(config.CFG_PART_CATEGORY))                     
-                            elif result == adsk.core.DialogResults.DialogNo:
-                                continue                          
-                            elif result == adsk.core.DialogResults.DialogCancel:
-                                return 
-                                
-                        elif len(item_list) == 1:
-                            # Just link it
-                            part = item_list[0]
-
-                        elif len(item_list) > 1:
-                            ao.ui.messageBox(f"More than one item found with IPN <b>{component.partNumber}. Please resolve this in InvenTree for now.", "Sync All")
-                            continue
-                        
-                        part.save(data={ 
-                            'name': component.name,
-                            'IPN': component.partNumber,
-                            'description': component.description if component.description else 'None'
-                        })
-                        helpers.write_f360_parameters(part, component)  
+                sync_all(ao, root)
 
                 # Refresh this table                
                 if palette:
                     command = helpers.get_cmd(ao, config.DEF_SEND_BOM)
                     command.execute()
-
-            elif html_args.action == 'UploadBom':                
-                root = ao.product.rootComponent
-                root_part = functions.inventree_get_part(root.id)
-
-                bom = functions.extract_bom()
-                if False in [item['part'] for item in bom] or root_part is False:
-                    ao.ui.messageBox("There's a Part not synced to InvenTree, unable to upload BOM.")
-                    return
-
-                if root_part.assembly is False:
-                    root_part.save({
-                        'assembly': True
-                    })
-
-                for item in bom:                    
-                    BomItem.create(inv_api(), {
-                        'part': root_part.pk,
-                        'quantity': item['instances'],
-                        'sub_part': item['part'].pk
-                    })
 
             # TODO investigate ghost answers
             # else:
@@ -184,7 +107,7 @@ def propose_create_f360_part(ao, component: adsk.fusion.Component, buttons):
 
     return ao.ui.messageBox(text, "Sync All", buttons, 1)
 
-def sync_all(ao, root: adsk.fusion.Component):
+def sync_all(ao, root: adsk.fusion.Component, updated={}):
     from inventree.part import Part
     from inventree.part import BomItem
 
@@ -193,27 +116,53 @@ def sync_all(ao, root: adsk.fusion.Component):
     if root_part == False:      
         item_list = Part.list(inv_api(), IPN=root.partNumber)
         if len(item_list) == 0:
-            result = propose_create_f360_part(ao, root, 3)
-
-            if result == adsk.core.DialogResults.DialogYes:
-                root_part = helpers.create_f360_part(root, functions.config_ref(config.CFG_PART_CATEGORY))               
-            elif result == adsk.core.DialogResults.DialogNo:
-                return 
+            root_part = helpers.create_f360_part(root, functions.config_ref(config.CFG_PART_CATEGORY))
 
         elif len(item_list) == 1:
             root_part = item_list[0]
 
         elif len(item_list) > 1:
-            ao.ui.messageBox(f"More than one item found with IPN <b>{root.partNumber}. Please resolve this in InvenTree for now.", "Sync All")
+            ao.ui.messageBox((
+                f"Part <i>{root.name}</i> does not have a unique IPN <b>{root.partNumber}</b>.<br />"
+                "<b>Please resolve this in InvenTree for now.</b>"
+            ), "Sync All")
             return
     
+    # Delete previous bom
+    for item in root_part.getBomItems():
+        item.delete() 
+
     root_part.save(data={ 
         'name': root.name,
         'IPN': root.partNumber,
-        'description': root.description if root.description else 'None'
+        'description': root.description if root.description else 'None',
+        # If the part has more than one occurences, it's probably an assembly.
+        # However, if you marked it Purchasable in InvenTree, it will not be an assembly.
+        'assembly': len(root.occurrences) > 0 and not root_part.purchaseable
     })
     helpers.write_f360_parameters(root_part, root)      
+       
+    if root_part.assembly:
+        instance_count = {}
+        for occurrence in root.occurrences:
+            if occurrence.component:
+                if str(occurrence.component.id) in instance_count:
+                    instance_count[occurrence.component.id] += 1
+                else:
+                    instance_count[occurrence.component.id] = 1
 
-    for occurrence in root.occurrences:
-        if occurrence.component:
-            sync_all(occurrence.component)
+                if not str(occurrence.component.id) in updated:
+                    sync_all(ao, occurrence.component, updated)
+                    updated[str(occurrence.component.id)] = True     
+
+        for id in instance_count:
+            part = inventree_get_part(id)    
+
+            if part is not False:
+                BomItem.create(inv_api(), {
+                    'part': root_part.pk,
+                    'quantity': instance_count[id],
+                    'sub_part': part.pk
+                })
+            else:
+                ao.ui.messageBox(f"Make sure you don't have duplicate IPN + names in child drawings of {root_part.name}!", "")

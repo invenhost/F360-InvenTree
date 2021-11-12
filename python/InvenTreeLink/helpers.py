@@ -84,14 +84,23 @@ def create_f360_part(component: adsk.fusion.Component, cat: str):
 @apper.lib_import(config.lib_path)
 def write_f360_parameters(part, component: adsk.fusion.Component):    
     from .functions import Fusion360Parameters
+    import math
 
     physicalProperties = component.physicalProperties
 
     Fusion360Parameters.ID.value.set(part, component.id)
-    Fusion360Parameters.AREA.value.set(part, physicalProperties.area)
-    Fusion360Parameters.VOLUME.value.set(part, physicalProperties.volume)
-    Fusion360Parameters.MASS.value.set(part, physicalProperties.mass)
-    Fusion360Parameters.DENSITY.value.set(part, physicalProperties.density)
+
+    if not math.isnan(physicalProperties.area):
+        Fusion360Parameters.AREA.value.set(part, physicalProperties.area)
+
+    if not math.isnan(physicalProperties.volume):
+        Fusion360Parameters.VOLUME.value.set(part, physicalProperties.volume)
+
+    if not math.isnan(physicalProperties.mass):
+        Fusion360Parameters.MASS.value.set(part, physicalProperties.mass)
+
+    if not math.isnan(physicalProperties.density):
+        Fusion360Parameters.DENSITY.value.set(part, physicalProperties.density)
 
     if component.material and component.material.name:
         Fusion360Parameters.MATERIAL.value.set(part, component.material.name)
