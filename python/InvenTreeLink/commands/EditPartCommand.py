@@ -151,54 +151,8 @@ class EditPartCommand(apper.Fusion360CommandBase):
             helpers.error()
 
     # cstm fnc
-    @apper.lib_import(config.lib_path)
-    def part_create(self, occ, cat):
-        """ create part based on occurence """
-        from inventree.part import Part
-
-        ao = apper.AppObjects()
-
-        # build up args
-        part_kargs = {
-            'name': occ.component.name,
-            'description': occ.component.description if occ.component.description else 'None',
-            'IPN': occ.component.partNumber,
-            'active': True,
-            'virtual': False,
-        }
-        # add category if set
-        if cat:
-            part_kargs.update({'category': cat.pk})
-        # create part itself
-        part = Part.create(functions.inv_api(), part_kargs)
-        # check if part created - else raise error
-        if not part:
-            ao.ui.messageBox('Error occured during API-call')
-            return
-        elif not part.pk:
-            error_detail = [f'<strong>{a}</strong>\n{b[0]}' for a, b in part._data.items()]
-            ao.ui.messageBox(f'Error occured:<br><br>{"<br>".join(error_detail)}')
-            return
-
-        Fusion360Parameters.ID.value.create_parameter(part, occ.component.id)
-        Fusion360Parameters.AREA.value.create_parameter(part, occ.physicalProperties.area)
-        Fusion360Parameters.VOLUME.value.create_parameter(part, occ.physicalProperties.volume)
-        Fusion360Parameters.MASS.value.create_parameter(part, occ.physicalProperties.mass)
-        Fusion360Parameters.DENSITY.value.create_parameter(part, occ.physicalProperties.density)
-
-        if occ.component.material and occ.component.material.name:
-            Fusion360Parameters.MATERIAL.value.create_parameter(part, occ.component.material.name)
-
-        axis = ['x', 'y', 'z']
-        bb_min = {a: getattr(occ.boundingBox.minPoint, a) for a in axis}
-        bb_max = {a: getattr(occ.boundingBox.maxPoint, a) for a in axis}
-        bb = {a: bb_max[a] - bb_min[a] for a in axis}
-
-        Fusion360Parameters.BOUNDING_BOX_WIDTH.value.create_parameter(part, bb["x"])
-        Fusion360Parameters.BOUNDING_BOX_HEIGHT.value.create_parameter(part, bb["y"])
-        Fusion360Parameters.BOUNDING_BOX_DEPTH.value.create_parameter(part, bb["z"])
-
-        return part
+    def part_create(self, occ: adsk.fusion.Occurrence, cat: str):
+        return helpers.create_f360_part(occ, cat)
 
     def part_refresh(self, occ, inp, part):
         """ updates PartInfo command-inputs with values for supplied parts """

@@ -260,7 +260,6 @@ def inventree_get_part(part_id):
     return search(parameters, part_id)
 # endregion
 
-
 # region bom functions
 def extract_bom():
     """ returns bom """
@@ -300,16 +299,13 @@ def extract_bom():
                 node = component_info(comp, comp_set=True)
                 node['volume'] = volume
                 node['linked'] = occ.isReferencedComponent
+                node['occurence'] = occ
+
                 bom.append(node)
 
         bom_parts = inventree_get_part([item['id'] for item in bom])
         for item in bom:
-            part = bom_parts[item['id']]
-
-            if part is not False:
-                item['synced'] = True # "<span style='color: green;'> Synced </span>"
-            else:
-                item['synced'] = False # "<span style='color: red;'> Not synced </span>"
+            item['part'] = bom_parts[item['id']]
 
         # Display the BOM
         return bom
@@ -318,7 +314,7 @@ def extract_bom():
         raise _e
 
 
-def component_info(comp, parent='#', comp_set=False):
+def component_info(comp: adsk.fusion.Component, parent='#', comp_set: bool = False):
     """ returns a node element """
     node = {
         'name': comp.name,

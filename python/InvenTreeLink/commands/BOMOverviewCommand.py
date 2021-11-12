@@ -7,6 +7,7 @@ import json
 from ..apper import apper
 from .. import config
 from .. import helpers
+from .. import functions
 
 
 # Class for a Fusion 360 Palette Command
@@ -46,8 +47,51 @@ class BomOverviewPaletteShowCommand(apper.PaletteCommandBase):
                 selections.add(entitiesByToken)  # TODO selection not working
                 helpers.get_cmd(ao, config.DEF_SEND_PART).execute()
 
+            elif html_args.action == 'SyncAll':
+                from inventree.part import Part
+                ao.ui.messageBox("Sync All")
+                
+                bom = functions.extract_bom()
+                for item in bom:
+                    part = item['part'];
+
+                    if part == False:
+                        occ = item['occurence']
+
+                        item_list = Part.list(functions.inv_api(), IPN=occ.component.partNumber)
+                        if len(item_list) == 0:
+                            fusion_360_data = (
+                                f"ID: {occ.component.id}<br />"
+                                f"Area: {occ.component.physicalProperties.area}cm2<br />"
+                                f"Volume: {occ.physicalProperties.volume}cm3<br />"
+                                f"Mass: {occ.physicalProperties.mass}kg<br />"
+                                f"Density: {occ.physicalProperties.density}g/cm3<br />"
+                            )
+
+                            if occ.component.material and occ.component.material.name:
+                                fusion_360_data += f"Material: {occ.component.material.name}\n"
+
+                            text = (
+                                f"Part <b>{occ.component.partNumber} | {occ.component.name}</b> is not recognized by Inventree.<br />"
+                                "<b>Do you want to create a Part with the values provided by Fusion360?</b><br /><br />"
+                                f"<i>{fusion_360_data}</i>"
+                            )
+                            
+                            result = ao.ui.messageBox(text, "Sync All", 4, 1)
+                            if result == adsk.core.DialogResults.DialogYes:
+                                item['part'] = helpers.create_f360_part(occ, functions.config_ref(config.CFG_PART_CATEGORY))                     
+                            elif result == adsk.core.DialogResults.DialogNo:
+                                continue                          
+                            elif result == adsk.core.DialogResults.DialogCancel:
+                                return 
+                        elif len(item_list) == 1:
+                            # Just link it
+                            helpers.write_f360_parameters(part, occ)
+
             elif html_args.action == 'UploadBom':
                 ao.ui.messageBox("Uploading bom")
+
+
 
             # TODO investigate ghost answers
             # else:

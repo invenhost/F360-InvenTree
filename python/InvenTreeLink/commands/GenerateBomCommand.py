@@ -36,7 +36,6 @@ class GenerateBomCommand(apper.Fusion360CommandBase):
                 start = datetime.now()
 
                 bom = functions.extract_bom()
-                unsynced_parts = [item for item in bom if item['synced'] is False]
 
                 component_tree = functions.make_component_tree()
                 
@@ -50,9 +49,9 @@ class GenerateBomCommand(apper.Fusion360CommandBase):
                 body = ''.join([
                     ''.join((
                         "<tr>"
-                        f"<td>{item['name']}</td>"
+                        f"<td>{item['IPN']} | {item['name']}</td>"
                         f"<td>{item['instances']}</td>"
-                        f"<td>{element_synced if item['synced'] else element_not_synced}</td>"
+                        f"<td>{element_synced if item['part'] else element_not_synced}</td>"
                         "</tr>" 
                     ))
                     for item in bom
@@ -74,7 +73,7 @@ class GenerateBomCommand(apper.Fusion360CommandBase):
                     header,
                     f"<p> {len(bom)} parts found in {datetime.now() - start}</p>"
                     f"{table_c}"
-                    "<button onclick='' class='btn btn-outline-secondary'> Sync All </button>" 
+                    "<button onclick='onClickSyncAll()' class='btn btn-outline-secondary'> Sync All </button>" 
                     "<button onclick='onClickUploadBom()' class='btn btn-outline-secondary'> Upload BOM </button>"    
                 ))
 
