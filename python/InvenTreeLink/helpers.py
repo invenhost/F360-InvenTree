@@ -48,19 +48,18 @@ def get_cmd(ao, key):
     return ao.ui.commandDefinitions.itemById(ref_name)
 
 @apper.lib_import(config.lib_path)
-def create_f360_part(occ: adsk.fusion.Occurrence, cat: str):
+def create_f360_part(component: adsk.fusion.Component, cat: str):
     """ create part based on occurence """
     from inventree.part import Part
     from . import functions
-    from .functions import Fusion360Parameters
 
     ao = apper.AppObjects()
 
     # build up args
     part_kargs = {
-        'name': occ.component.name,
-        'description': occ.component.description if occ.component.description else 'None',
-        'IPN': occ.component.partNumber,
+        'name': component.name,
+        'description': component.description if component.description else 'None',
+        'IPN': component.partNumber,
         'active': True,
         'virtual': False,
     }
@@ -78,26 +77,28 @@ def create_f360_part(occ: adsk.fusion.Occurrence, cat: str):
         ao.ui.messageBox(f'Error occured:<br><br>{"<br>".join(error_detail)}')
         return
 
-    write_f360_parameters(part, occ)
+    write_f360_parameters(part, component)
 
     return part
 
 @apper.lib_import(config.lib_path)
-def write_f360_parameters(part, occ: adsk.fusion.Occurrence):    
+def write_f360_parameters(part, component: adsk.fusion.Component):    
     from .functions import Fusion360Parameters
 
-    Fusion360Parameters.ID.value.create_parameter(part, occ.component.id)
-    Fusion360Parameters.AREA.value.create_parameter(part, occ.physicalProperties.area)
-    Fusion360Parameters.VOLUME.value.create_parameter(part, occ.physicalProperties.volume)
-    Fusion360Parameters.MASS.value.create_parameter(part, occ.physicalProperties.mass)
-    Fusion360Parameters.DENSITY.value.create_parameter(part, occ.physicalProperties.density)
+    physicalProperties = component.physicalProperties
 
-    if occ.component.material and occ.component.material.name:
-        Fusion360Parameters.MATERIAL.value.create_parameter(part, occ.component.material.name)
+    Fusion360Parameters.ID.value.create_parameter(part, component.id)
+    Fusion360Parameters.AREA.value.create_parameter(part, physicalProperties.area)
+    Fusion360Parameters.VOLUME.value.create_parameter(part, physicalProperties.volume)
+    Fusion360Parameters.MASS.value.create_parameter(part, physicalProperties.mass)
+    Fusion360Parameters.DENSITY.value.create_parameter(part, physicalProperties.density)
+
+    if component.material and component.material.name:
+        Fusion360Parameters.MATERIAL.value.create_parameter(part, component.material.name)
 
     axis = ['x', 'y', 'z']
-    bb_min = {a: getattr(occ.boundingBox.minPoint, a) for a in axis}
-    bb_max = {a: getattr(occ.boundingBox.maxPoint, a) for a in axis}
+    bb_min = {a: getattr(component.boundingBox.minPoint, a) for a in axis}
+    bb_max = {a: getattr(component.boundingBox.maxPoint, a) for a in axis}
     bb = {a: bb_max[a] - bb_min[a] for a in axis}
 
     Fusion360Parameters.BOUNDING_BOX_WIDTH.value.create_parameter(part, bb["x"])
