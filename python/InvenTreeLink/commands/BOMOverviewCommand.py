@@ -11,6 +11,9 @@ from .. import functions
         
 from ..functions import inv_api, inventree_get_part
 
+import threading
+import typing
+
 # Class for a Fusion 360 Palette Command
 class BomOverviewPaletteShowCommand(apper.PaletteCommandBase):
 
@@ -52,14 +55,12 @@ class BomOverviewPaletteShowCommand(apper.PaletteCommandBase):
                 helpers.get_cmd(ao, config.DEF_SEND_PART).execute()
 
             elif html_args.action == 'SyncAll':
-                
                 root = ao.product.rootComponent
-                sync_all(ao, root)
 
-                # Refresh this table                
-                if palette:
-                    command = helpers.get_cmd(ao, config.DEF_SEND_BOM)
-                    command.execute()
+                # sync_all_thread(ao, root)
+
+                t = threading.Thread(target=sync_all_thread, args=(ao, root))
+                t.start()
 
             # TODO investigate ghost answers
             # else:
@@ -106,10 +107,71 @@ def propose_create_f360_part(ao, component: adsk.fusion.Component, buttons):
     )
 
     return ao.ui.messageBox(text, "Sync All", buttons, 1)
+  
 
-def sync_all(ao, root: adsk.fusion.Component, updated={}):
+@apper.lib_import(config.lib_path)
+def sync_all_thread(ao, root: adsk.fusion.Component):
+    palette = ao.ui.palettes.itemById(config.ITEM_PALETTE)
+
+    log_html = []
+    def log(message: str, color: str = "black"):
+        log_html.append(f'<span style="color: {color};">{message}</span>')
+
+        palette.sendInfoToHTML(
+            config.DEF_SYNC_LOG,
+            '<br />'.join(log_html)
+        )  
+        
+    palette.sendInfoToHTML(
+        config.DEF_SEND_BOM,
+        (
+            '<div id="loading">'
+                '<br><br><br>'
+                '<div class="d-flex justify-content-center">'
+                    '<div class="spinner-border" role="status"> </div>'
+                    '</div>'
+
+                    '<div id="ignore_warnings" style="display: none;">'         
+                        '<div class="d-flex justify-content-center">'   
+                        '<button onclick="" class="btn btn-outline-secondary"> Ignore warnings and Sync </button>'
+                    '</div>'
+                '</div>'
+            
+                '<div class="d-flex justify-content-center">'
+                    '<b> Syncing <span id="status">...</span> </b>'
+                '</div>'
+
+                '<br />'
+            '</div>'
+
+            '<div class="d-flex justify-content-center">'
+                '<div id="sync_log"> </div>'
+            '</div'
+        )
+    )  
+
+    if sync_all(ao, root, log) is True:
+        ao.ui.messageBox('<br />'.join(log_html), "Synchronization")
+    
+    command = helpers.get_cmd(ao, config.DEF_SEND_BOM)
+    command.execute()
+
+COLOR_WARNING = "rgb(255,145,0)"
+    
+@apper.lib_import(config.lib_path)
+def sync_all(ao, root: adsk.fusion.Component, log, visited={}, warning_raised = False):
     from inventree.part import Part
     from inventree.part import BomItem
+    
+    palette = ao.ui.palettes.itemById(config.ITEM_PALETTE)
+    palette.sendInfoToHTML(
+        "exec",
+        f"document.getElementById('status').innerHTML = '{root.name}';"
+    )  
+
+    if root.name.lower() == root.partNumber.lower():
+        log(f"Warning: {root.name}'s name is the same as it's part number!", COLOR_WARNING)
+        warning_raised = True
 
     root_part = inventree_get_part(root.id)
 
@@ -122,10 +184,11 @@ def sync_all(ao, root: adsk.fusion.Component, updated={}):
             root_part = item_list[0]
 
         elif len(item_list) > 1:
-            ao.ui.messageBox((
-                f"Part <i>{root.name}</i> does not have a unique IPN <b>{root.partNumber}</b>.<br />"
+            log((
+                f"Part <i>{root.name}</i> does not have a unique (IPN = <b>'{root.partNumber}'</b>).<br />"
                 "<b>Please resolve this in InvenTree for now.</b>"
-            ), "Sync All")
+            ), "red")
+            warning_raised = True
             return
     
     # Delete previous bom
@@ -143,6 +206,7 @@ def sync_all(ao, root: adsk.fusion.Component, updated={}):
     helpers.write_f360_parameters(root_part, root)      
        
     if root_part.assembly:
+        instance_name = {}
         instance_count = {}
         for occurrence in root.occurrences:
             if occurrence.component:
@@ -150,10 +214,11 @@ def sync_all(ao, root: adsk.fusion.Component, updated={}):
                     instance_count[occurrence.component.id] += 1
                 else:
                     instance_count[occurrence.component.id] = 1
+                    instance_name[occurrence.component.id] = occurrence.component.name
 
-                if not str(occurrence.component.id) in updated:
-                    sync_all(ao, occurrence.component, updated)
-                    updated[str(occurrence.component.id)] = True     
+                if not str(occurrence.component.id) in visited:
+                    sync_all(ao, occurrence.component, log, visited, warning_raised)
+                    visited[str(occurrence.component.id)] = True     
 
         for id in instance_count:
             part = inventree_get_part(id)    
@@ -165,4 +230,7 @@ def sync_all(ao, root: adsk.fusion.Component, updated={}):
                     'sub_part': part.pk
                 })
             else:
-                ao.ui.messageBox(f"Make sure you don't have duplicate IPN + names in child drawings of {root_part.name}!", "")
+                log(f"Unable to get part for {instance_name[id]}")                
+                warning_raised = True
+
+    return warning_raised

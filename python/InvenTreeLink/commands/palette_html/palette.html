@@ -120,6 +120,11 @@
                     $('#tree_div').jstree(true).settings.core.data = data_in;
                     $('#tree_div').jstree(true).refresh();
                 }
+                else if(action == "SyncLog") {
+                    document.getElementById("sync_log").innerHTML = data;
+                } else if(action == "exec") {
+                    eval(data);
+                }
                 else if (action == 'debugger') {
                     debugger;
                 }

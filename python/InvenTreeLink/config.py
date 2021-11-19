@@ -20,6 +20,7 @@ DEF_SEND_ONLINE_STATE = "SendOnlineState"
 DEF_SEND_PART = "SendPart"
 DEF_SEND_STEP = "SendStep"
 DEF_IMPORT_PART = "ImportPart"
+DEF_SYNC_LOG = "SyncLog"
 
 CFG_ADDRESS = 'address'
 CFG_TOKEN = 'token'

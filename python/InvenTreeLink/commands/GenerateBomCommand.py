@@ -9,6 +9,8 @@ from ..apper import apper
 from .. import config
 from .. import functions
 
+import threading
+
 # Loads the Bill of Materials from the current Fusion360 design.
 class GenerateBomCommand(apper.Fusion360CommandBase):
     def on_execute(self, command: adsk.core.Command, command_inputs: adsk.core.CommandInputs, args, input_values):
@@ -27,7 +29,7 @@ class GenerateBomCommand(apper.Fusion360CommandBase):
             palette = ao.ui.palettes.itemById(config.ITEM_PALETTE)
 
             # Send message to the HTML Page
-            if palette:
+            def create_bom_thread():
                 palette.sendInfoToHTML(
                     config.DEF_SEND_BOM,
                     '<br><br><br><div class="d-flex justify-content-center"><div class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div></div>'
@@ -85,6 +87,9 @@ class GenerateBomCommand(apper.Fusion360CommandBase):
                     'SendTree',
                     json.dumps(component_tree)
                 )
+
+            t = threading.Thread(target=create_bom_thread, args=())
+            t.start()
         except Exception as _e:
             config.app_tracking.capture_exception(_e)
             raise _e
