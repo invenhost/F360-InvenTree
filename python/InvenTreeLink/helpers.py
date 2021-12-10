@@ -102,8 +102,12 @@ def write_f360_parameters(part, component: adsk.fusion.Component):
     if not math.isnan(physicalProperties.density):
         Fusion360Parameters.DENSITY.value.set(part, physicalProperties.density)
 
-    if component.material and component.material.name:
-        Fusion360Parameters.MATERIAL.value.set(part, component.material.name)
+    try:
+        if component.material and component.material.name:
+            Fusion360Parameters.MATERIAL.value.set(part, component.material.name)
+    except:
+        # For some weird reason an assetInst exception gets thrown here.
+        pass
 
     axis = ['x', 'y', 'z']
     bb_min = {a: getattr(component.boundingBox.minPoint, a) for a in axis}

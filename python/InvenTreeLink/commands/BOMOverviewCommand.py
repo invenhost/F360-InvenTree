@@ -13,6 +13,7 @@ from ..functions import inv_api, inventree_get_part
 
 import threading
 import typing
+import sys
 
 # Class for a Fusion 360 Palette Command
 class BomOverviewPaletteShowCommand(apper.PaletteCommandBase):
@@ -111,6 +112,8 @@ def propose_create_f360_part(ao, component: adsk.fusion.Component, buttons):
 
 @apper.lib_import(config.lib_path)
 def sync_all_thread(ao, root: adsk.fusion.Component):
+    print("Starting sync_all thread.")
+
     palette = ao.ui.palettes.itemById(config.ITEM_PALETTE)
 
     log_html = []
@@ -130,15 +133,10 @@ def sync_all_thread(ao, root: adsk.fusion.Component):
                 '<div class="d-flex justify-content-center">'
                     '<div class="spinner-border" role="status"> </div>'
                     '</div>'
-
-                    '<div id="ignore_warnings" style="display: none;">'         
-                        '<div class="d-flex justify-content-center">'   
-                        '<button onclick="" class="btn btn-outline-secondary"> Ignore warnings and Sync </button>'
-                    '</div>'
                 '</div>'
             
                 '<div class="d-flex justify-content-center">'
-                    '<b> Syncing <span id="status">...</span> </b>'
+                    '<p> Syncing <i><b><span id="status"></span></b></i>...</p>'
                 '</div>'
 
                 '<br />'
@@ -150,16 +148,21 @@ def sync_all_thread(ao, root: adsk.fusion.Component):
         )
     )  
 
-    if sync_all(ao, root, log) is True:
-        ao.ui.messageBox('<br />'.join(log_html), "Synchronization")
+    visited = dict()
+    sync_all(ao, root, log, None, visited, False)
     
     command = helpers.get_cmd(ao, config.DEF_SEND_BOM)
     command.execute()
 
+    visited.clear()
+
+    print("Stopping thread...")
+    sys.exit()
+
 COLOR_WARNING = "rgb(255,145,0)"
     
 @apper.lib_import(config.lib_path)
-def sync_all(ao, root: adsk.fusion.Component, log, visited={}, warning_raised = False):
+def sync_all(ao, root: adsk.fusion.Component, log, parent = None, visited={}, warning_raised = False):
     from inventree.part import Part
     from inventree.part import BomItem
     
@@ -170,40 +173,86 @@ def sync_all(ao, root: adsk.fusion.Component, log, visited={}, warning_raised = 
     )  
 
     if root.name.lower() == root.partNumber.lower():
-        log(f"Warning: {root.name}'s name is the same as it's part number!", COLOR_WARNING)
-        warning_raised = True
+        # The name is the same as the part number, remove the part number.
+        root.partNumber = ""
+
+
+    parent_info = f" in {parent.name}" if parent else ''
+    #print(f"Updating {root.name}{parent_info}...")
 
     root_part = inventree_get_part(root.id)
+    if root_part == False:
+        # The part is not found using the fusion 360 ID.
+        print(f"Unable to find {root.name} by Fusion 360 ID {root.id}.")
 
-    if root_part == False:      
-        item_list = Part.list(inv_api(), IPN=root.partNumber)
-        if len(item_list) == 0:
+        if not root.partNumber or root.partNumber.startswith("Component"):
+            try:                
+                # If the partnumber is set by Fusion360, remove it for InvenTree
+                root.partNumber = ""
+            except:
+                pass
+            # The part does not have an IPN set, however this is no problem because it will be found
+            # using the Fusion 360 ID.
             root_part = helpers.create_f360_part(root, functions.config_ref(config.CFG_PART_CATEGORY))
+            print(f"{root.name} does not have it's IPN set, so created a new part.")
 
-        elif len(item_list) == 1:
-            root_part = item_list[0]
-
-        elif len(item_list) > 1:
             log((
-                f"Part <i>{root.name}</i> does not have a unique (IPN = <b>'{root.partNumber}'</b>).<br />"
-                "<b>Please resolve this in InvenTree for now.</b>"
-            ), "red")
-            warning_raised = True
-            return
+                f"<i><b>{root.name}</b></i>{parent_info} does not have a IPN set"
+            ), "warn")
+        else:
+            # The part number is not empty, so search InvenTree for an existing part.
+            item_list = Part.list(inv_api(), IPN=root.partNumber, has_ipn=True)
+
+            if len(item_list) == 0:              
+                # If the partnumber is not recognized by InvenTree, remove it for Fusion360
+                root.partNumber = ""
+
+                print(f"Item {root.name}{parent_info} is not matched by part number, but will be created with an empty IPN.")
+
+                # There are no matches with this IPN, create the part.
+                root_part = helpers.create_f360_part(root, functions.config_ref(config.CFG_PART_CATEGORY))
+            elif len(item_list) == 1:
+                #print(f"Item {root.name} is singly matched by part number.")
+                # There's a single match by IPN, it must be the part we want.
+                root_part = item_list[0]
+            elif len(item_list) > 1:
+                print(f"Item {root.name}{parent_info} is not matched by Fusion360 ID, but found {len(item_list)} items matching IPN {root.partNumber}")
+
+                log((
+                    f"Skipping part <i><b>{root.name}</b></i>{parent_info} because it does not have a unique IPN. (IPN = <b>'{root.partNumber}'</b>)"
+                ), "red")
+
+                return
+
+    # If there's an inventree name, it will be copied and set.
+    # If the part was created right before this, it was created with the 
+    # part name of Fusion360, so this would have no side effect.
+    new_name = root_part.name
+    new_IPN = root_part.IPN
+
+    # Exception is thrown when trying to edit root component name.
+    try:
+        root.name = new_name
+    except:
+        pass
     
-    # Delete previous bom
-    for item in root_part.getBomItems():
-        item.delete() 
+    root.partNumber = new_IPN
+    
+    if not root_part.assembly:
+        # Delete previous bom
+        for item in root_part.getBomItems():
+            item.delete() 
+
+    #print(f"Before save: {new_name} was an assembly: {root_part.assembly} with {len(root.occurrences)} occs")
 
     root_part.save(data={ 
-        'name': root.name,
-        'IPN': root.partNumber,
-        'description': root.description if root.description else 'None',
-        # If the part has more than one occurences, it's probably an assembly.
-        # However, if you marked it Purchasable in InvenTree, it will not be an assembly.
-        'assembly': len(root.occurrences) > 0 and not root_part.purchaseable
+        'name': new_name,
+        'IPN': new_IPN,
+        'description': root.description if root.description else f'Fusion360 Name: {root.name}',
     })
     helpers.write_f360_parameters(root_part, root)      
+    
+    #print(f"After save: {new_name} is an assembly: {root_part.assembly} with {len(root.occurrences)} occs")
        
     if root_part.assembly:
         instance_name = {}
@@ -211,17 +260,27 @@ def sync_all(ao, root: adsk.fusion.Component, log, visited={}, warning_raised = 
         for occurrence in root.occurrences:
             if occurrence.component:
                 if str(occurrence.component.id) in instance_count:
-                    instance_count[occurrence.component.id] += 1
+                    instance_count[str(occurrence.component.id)] += 1
                 else:
-                    instance_count[occurrence.component.id] = 1
-                    instance_name[occurrence.component.id] = occurrence.component.name
+                    instance_count[str(occurrence.component.id)] = 1
+                    instance_name[str(occurrence.component.id)] = occurrence.component.name
 
-                if not str(occurrence.component.id) in visited:
-                    sync_all(ao, occurrence.component, log, visited, warning_raised)
-                    visited[str(occurrence.component.id)] = True     
+                if str(occurrence.component.id) in visited:
+                    #print(f"Skipping {occurrence.component.name} because it's already visited.") 
+                    noop = True
+                else:
+                    sync_all(ao, occurrence.component, log, root, visited, warning_raised)
+                    visited[str(occurrence.component.id)] = True    
 
+
+        palette.sendInfoToHTML(
+            "exec",
+            f"document.getElementById('status').innerHTML = '{root.name}'s Bill of Materials';"
+        )  
+        parts = inventree_get_part([id for id in instance_count])
+        print(f"Creating Bill of Materials for {new_name}... ")
         for id in instance_count:
-            part = inventree_get_part(id)    
+            part = parts[id]
 
             if part is not False:
                 BomItem.create(inv_api(), {
@@ -232,5 +291,9 @@ def sync_all(ao, root: adsk.fusion.Component, log, visited={}, warning_raised = 
             else:
                 log(f"Unable to get part for {instance_name[id]}")                
                 warning_raised = True
+
+        print(f"Done creating Bill of Materials for {new_name}.")
+        
+    #print(f"Updated part {root.name} ({root.id})")
 
     return warning_raised

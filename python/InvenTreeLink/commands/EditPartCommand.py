@@ -51,6 +51,8 @@ class EditPartCommand(apper.Fusion360CommandBase):
                     # compare
                     if not getattr(obj, item) == value:
                         data[item] = value
+                    # Return the value so it can be set.
+                    return value
 
                 def getValue(text_name, obj, item, data):
                     value = inp.itemById(text_name).value
@@ -60,8 +62,14 @@ class EditPartCommand(apper.Fusion360CommandBase):
 
                 if part:
                     _data = {}
-                    getText('text_part_name', part, 'name', _data)
-                    getText('text_part_ipn', part, 'IPN', _data)
+                    
+                    try:
+                        occ.component.name = getText('text_part_name', part, 'name', _data)
+                    except:
+                        pass
+
+                    occ.component.partNumber = getText('text_part_ipn', part, 'IPN', _data)
+                    
                     getText('text_part_description', part, 'description', _data)
                     getText('text_part_notes', part, 'notes', _data)
                     getText('text_part_keywords', part, 'keywords', _data)

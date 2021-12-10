@@ -3,6 +3,8 @@ import traceback
 
 import os
 
+import threading
+
 try:
     from .apper import apper
     from . import config
@@ -17,7 +19,7 @@ try:
     from .commands.GenerateBomCommand import GenerateBomCommand
     from .commands.ImportStlCommand import ImportStlCommand
     from .commands.ImportPartCommand import ImportPartCommand
-
+    
     # Commands
 
     # Palette
@@ -113,6 +115,61 @@ try:
         ui.messageBox("Unable to load config.", config.app_name)
     
     functions.init_Fusion360()
+
+    # class MyDocumentActivatedHandler(adsk.core.DocumentEventHandler):
+    #     def __init__(self):
+    #         super().__init__()
+    #     def notify(self, args):
+    #         eventArgs = adsk.core.DocumentEventArgs.cast(args)
+
+    #         # Code to react to the event.
+    #         ui.messageBox('In MyDocumentActivatedHandler event handler.\ndocument: {}'.format(eventArgs.document.name))   
+        
+    # class MyDocumentSavedHandler(adsk.core.DocumentEventHandler):
+    #     def __init__(self):
+    #         super().__init__()
+
+    #     def notify(self, args):
+    #         eventArgs = adsk.core.DocumentEventArgs.cast(args)
+
+    #         # Code to react to the event.
+    #         ui.messageBox('In MyDocumentSavedHandler event handler.')   
+
+    # onDocumentSaved = MyDocumentSavedHandler()
+    # app.documentSaved.add(onDocumentSaved)
+    
+    # onDocumentActivated = MyDocumentActivatedHandler()
+    # app.documentActivated.add(onDocumentActivated)
+
+    # def correct_inventree_names_thread():
+    #     # Recursively correct the names to inventree names
+    #     def correct_inventree_names(component):
+    #         part = functions.inventree_get_part(component.id)
+
+    #         if part:           
+    #             if component.name.lower() != part.name.lower():
+    #                 print(f"Correcting name of '{component.name}' to '{part.name}'")
+    #                 component.name = part.name
+                    
+    #             if component.partNumber.lower() != part.IPN.lower():
+    #                 print(f"Correcting IPN of '{component.partNumber}' to '{part.IPN}'")
+    #                 component.partNumber = part.IPN
+
+    #         for occurrence in component.occurrences:
+    #             if occurrence.component:
+    #                 correct_inventree_names(occurrence.component)
+
+    #     ao = apper.AppObjects()
+    #     root = ao.product.rootComponent
+
+    #     for occurrence in root.occurrences:
+    #         if occurrence.component:
+    #             correct_inventree_names(occurrence.component)  
+
+    # t = threading.Thread(target=correct_inventree_names_thread)
+    # t.start()
+
+    print("InvenTreeLink started.")
 
 except:  # noqa: E722
     app = adsk.core.Application.get()
