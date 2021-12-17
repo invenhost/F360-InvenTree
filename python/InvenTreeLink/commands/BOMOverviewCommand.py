@@ -183,7 +183,7 @@ def sync_all(ao, root: adsk.fusion.Component, log, parent = None, visited={}, wa
     root_part = inventree_get_part(root.id)
     if root_part == False:
         # The part is not found using the fusion 360 ID.
-        print(f"Unable to find {root.name} by Fusion 360 ID {root.id}.")
+        #print(f"Unable to find {root.name} by Fusion 360 ID {root.id}.")
 
         if not root.partNumber or root.partNumber.startswith("Component"):
             try:                
@@ -212,7 +212,7 @@ def sync_all(ao, root: adsk.fusion.Component, log, parent = None, visited={}, wa
                 # There are no matches with this IPN, create the part.
                 root_part = helpers.create_f360_part(root, functions.config_ref(config.CFG_PART_CATEGORY))
             elif len(item_list) == 1:
-                #print(f"Item {root.name} is singly matched by part number.")
+                print(f"Item {root.name} is singly matched by part number.")
                 # There's a single match by IPN, it must be the part we want.
                 root_part = item_list[0]
             elif len(item_list) > 1:
@@ -277,6 +277,7 @@ def sync_all(ao, root: adsk.fusion.Component, log, parent = None, visited={}, wa
             "exec",
             f"document.getElementById('status').innerHTML = '{root.name}'s Bill of Materials';"
         )  
+
         parts = inventree_get_part([id for id in instance_count])
         print(f"Creating Bill of Materials for {new_name}... ")
         for id in instance_count:
