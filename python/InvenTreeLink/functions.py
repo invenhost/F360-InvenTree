@@ -241,15 +241,15 @@ def inventree_get_part(part_id):
     from inventree.part import Part
     from inventree.base import Parameter
 
-    def find(inv_parameters, part_id):
-        inv_part_id = [param.part for param in inv_parameters if str(param.data) == str(part_id)]
+    def find(parameters, part_id):
+        part = [a.part for a in parameters if str(a.data) == str(part_id)]
 
-        if len(inv_part_id) == 1:
+        if len(part) == 1:
             #print(f"inventree_get_part(): Found the perfect match.")
-            return Part(inv_api(), inv_part_id[0])
-        elif len(inv_part_id) > 0:
-            print(f"inventree_get_part(): Warning: {part_id} multiple ({len(inv_part_id)}) matches:")
-            for id in inv_part_id:
+            return Part(inv_api(), part[0])
+        elif len(part) > 0:
+            print(f"inventree_get_part(): Warning: {part_id} multiple ({len(part)}) matches:")
+            for id in part:
                 p = Part(inv_api(), id)
                 print(f"Part: {p.IPN} | {p.name}")
             print()
