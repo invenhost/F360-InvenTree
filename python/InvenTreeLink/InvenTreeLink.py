@@ -122,7 +122,7 @@ except:  # noqa: E722
     app = adsk.core.Application.get()
     ui = app.userInterface
     if ui:
-        ui.messageBox('Initialization Failed: {}'.format(traceback.format_exc()))
+        ui.messageBox('Initialization of InvenTreeLink Failed: {}'.format(traceback.format_exc()))
 
 debug = True
 
