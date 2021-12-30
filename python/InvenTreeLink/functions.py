@@ -245,7 +245,6 @@ def inventree_get_part(part_id):
         part = [a.part for a in parameters if str(a.data) == str(part_id)]
 
         if len(part) == 1:
-            #print(f"inventree_get_part(): Found the perfect match.")
             return Part(inv_api(), part[0])
         elif len(part) > 0:
             print(f"inventree_get_part(): Warning: {part_id} multiple ({len(part)}) matches:")
@@ -253,8 +252,6 @@ def inventree_get_part(part_id):
                 p = Part(inv_api(), id)
                 print(f"Part: {p.IPN} | {p.name}")
             print()
-        #else:                
-            #print(f"inventree_get_part(): Warning: {part_id} has no ({len(inv_part_id)}) matches!")
 
         return False
 
