@@ -128,8 +128,10 @@ debug = True
 
 
 def run(context):
+    """function called on startup"""
     inventreelink.run_app()
 
 
 def stop(context):
+    """function called on stopping"""
     inventreelink.stop_app()
