@@ -13,7 +13,7 @@ try:
     inventreelink.root_path = config.app_path
 
     from .commands.EditPartCommand import EditPartCommand
-    from .commands.BOMOverviewCommand import BomOverviewPaletteShowCommand
+    from .commands.BOMOverviewCommand import BomOverviewCommand
     from .commands.GenerateBomCommand import GenerateBomCommand
     from .commands.UploadStepCommand import UploadStepCommand
     from .commands.ImportPartCommand import ImportPartCommand
@@ -23,7 +23,7 @@ try:
     # Palette
     inventreelink.add_command(
         'Show BOM overview',
-        BomOverviewPaletteShowCommand,
+        BomOverviewCommand,
         {
             'cmd_description': 'Show the BOM overview palette',
             'cmd_id': config.DEF_SHOW_PALETTE,
