@@ -16,8 +16,7 @@ try:
     from .commands.BOMOverviewCommand import BomOverviewCommand
     from .commands.GenerateBomCommand import GenerateBomCommand
     from .commands.UploadStepCommand import UploadStepCommand
-    from .commands.ImportPartCommand import ImportPartCommand
-    
+
     # Commands
 
     # Palette
@@ -71,21 +70,6 @@ try:
             'cmd_resources': config.DEF_EDIT_PART,
             'command_visible': True,
             'command_promoted': False,
-        }
-    )
-
-    inventreelink.add_command(
-        'Import Part',
-        ImportPartCommand,
-        {
-            'cmd_description': 'Import a Part as STL',
-            'cmd_id': config.DEF_IMPORT_PART,
-            'workspace': config.DEF_ENVIROMENT,
-            'toolbar_panel_id': config.ToolbarPanelID.PART,
-            'cmd_resources': config.DEF_GENERATE_BOM,
-            'command_visible': True,
-            'command_promoted': False,
-            'palette_id': config.ITEM_PALETTE,
         }
     )
 
