@@ -11,7 +11,7 @@ from .. import helpers
 from .. import config
 
 
-class SendStepCommand(apper.Fusion360CommandBase):
+class UploadStepCommand(apper.Fusion360CommandBase):
 
     @apper.lib_import(config.lib_path)
     def on_execute(self, command: adsk.core.Command, command_inputs: adsk.core.CommandInputs, args, input_values):
@@ -19,8 +19,6 @@ class SendStepCommand(apper.Fusion360CommandBase):
 
         try:
             ao = apper.AppObjects()
-
-            ao.ui.messageBox("STEP FILE")
 
             if ao.ui.activeSelections.count == 1:
                 occ = adsk.fusion.Occurrence.cast(ao.ui.activeSelections[0].entity)
@@ -34,8 +32,6 @@ class SendStepCommand(apper.Fusion360CommandBase):
                 temp_path = os.path.join(temp_dir, file_name)
 
                 self._write_step(temp_path, occ.component)
-
-                ao.ui.messageBox("File at {}, size: {}".format(temp_path, os.path.getsize(temp_path)))
 
                 part = functions.inventree_get_part(occ.component.id)
 

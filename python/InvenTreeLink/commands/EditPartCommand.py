@@ -10,11 +10,13 @@ from .. import helpers
 from ..functions import Fusion360Parameters
 
 
-class ShowPartCommand(apper.Fusion360CommandBase):
+class EditPartCommand(apper.Fusion360CommandBase):
     def on_input_changed(self, command, inputs, changed_input, input_values):
         try:
             ao = apper.AppObjects()
-            if ao.ui.activeSelections.count == 1:
+            if ao.ui.activeSelections.count == 1:              
+                # TODO: Support Design's
+
                 occ = adsk.fusion.Occurrence.cast(ao.ui.activeSelections[0].entity)
                 arg_id = changed_input.id
                 inp = inputs.command.commandInputs
@@ -49,6 +51,8 @@ class ShowPartCommand(apper.Fusion360CommandBase):
                     # compare
                     if not getattr(obj, item) == value:
                         data[item] = value
+                    # Return the value so it can be set.
+                    return value
 
                 def getValue(text_name, obj, item, data):
                     value = inp.itemById(text_name).value
@@ -58,8 +62,14 @@ class ShowPartCommand(apper.Fusion360CommandBase):
 
                 if part:
                     _data = {}
-                    getText('text_part_name', part, 'name', _data)
-                    getText('text_part_ipn', part, 'IPN', _data)
+                    
+                    try:
+                        occ.component.name = getText('text_part_name', part, 'name', _data)
+                    except:
+                        pass
+
+                    occ.component.partNumber = getText('text_part_ipn', part, 'IPN', _data)
+                    
                     getText('text_part_description', part, 'description', _data)
                     getText('text_part_notes', part, 'notes', _data)
                     getText('text_part_keywords', part, 'keywords', _data)
@@ -84,21 +94,21 @@ class ShowPartCommand(apper.Fusion360CommandBase):
             # Tabs
             tabCmdInput1 = inputs.addTabCommandInput('tab_1', 'Start')
             tab1ChildInputs = tabCmdInput1.children
-            tabCmdInput2 = inputs.addTabCommandInput('tab_2', 'Teil-Details')
-            tab2ChildInputs = tabCmdInput2.children
+            part_details_tab = inputs.addTabCommandInput('tab_2', 'Part Details')
+            part_details_children = part_details_tab.children
 
             # TextInputs for general information
-            tab2ChildInputs.addTextBoxCommandInput('text_id', 'id', 'id', 1, True)
-            tab2ChildInputs.addTextBoxCommandInput('text_name', 'name', 'name', 1, True)
-            tab2ChildInputs.addTextBoxCommandInput('text_description', 'description', 'description', 1, True)
-            tab2ChildInputs.addTextBoxCommandInput('text_opacity', 'opacity', 'opacity', 1, True)
-            tab2ChildInputs.addTextBoxCommandInput('text_partNumber', 'partNumber', 'partNumber', 1, True)
-            tab2ChildInputs.addTextBoxCommandInput('text_area', 'area', 'area', 1, True)
-            tab2ChildInputs.addTextBoxCommandInput('text_volume', 'volume', 'volume', 1, True)
-            tab2ChildInputs.addTextBoxCommandInput('text_mass', 'mass', 'mass', 1, True)
-            tab2ChildInputs.addTextBoxCommandInput('text_density', 'density', 'density', 1, True)
-            tab2ChildInputs.addTextBoxCommandInput('text_material', 'material', 'material', 1, True)
-            tableInput = tab2ChildInputs.addTableCommandInput('table', 'Table', 4, '1:1:1:1')
+            part_details_children.addTextBoxCommandInput('text_id', 'ID', '', 1, True)
+            part_details_children.addTextBoxCommandInput('text_name', 'Name', '', 1, True)
+            part_details_children.addTextBoxCommandInput('text_description', 'Description', '', 1, True)
+            part_details_children.addTextBoxCommandInput('text_opacity', 'Opacity', '', 1, True)
+            part_details_children.addTextBoxCommandInput('text_partNumber', 'Part Number', '', 1, True)
+            part_details_children.addTextBoxCommandInput('text_area', 'Area', '', 1, True)
+            part_details_children.addTextBoxCommandInput('text_volume', 'Volume', '', 1, True)
+            part_details_children.addTextBoxCommandInput('text_mass', 'Mass', '', 1, True)
+            part_details_children.addTextBoxCommandInput('text_density', 'Density', '', 1, True)
+            part_details_children.addTextBoxCommandInput('text_material', 'Material', '', 1, True)
+            tableInput = part_details_children.addTableCommandInput('table', 'Table', 4, '1:1:1:1')
             tableInput.isFullWidth = True
             tableInput.tablePresentationStyle = 2
 
@@ -107,31 +117,31 @@ class ShowPartCommand(apper.Fusion360CommandBase):
             selectInput.addSelectionFilter('Occurrences')
             selectInput.setSelectionLimits(1, 1)
             # Buttons
-            tab1ChildInputs.addBoolValueInput('button_create', 'create part', False, 'commands/resources/ButtonCreate', True)
-            tab1ChildInputs.addBoolValueInput('button_refresh', 'refresh Information', False, 'commands/resources/SendOnlineState', True)
+            tab1ChildInputs.addBoolValueInput('button_create', 'Create part', False, 'commands/resources/ButtonCreate', True)
+            tab1ChildInputs.addBoolValueInput('button_refresh', 'Refresh', False, 'commands/resources/SendOnlineState', True)
 
             # TextInputs for InvenTree
             grpCmdInput1 = tab1ChildInputs.addGroupCommandInput('grp_1', 'General')
             grp1ChildInputs = grpCmdInput1.children
             # img = tab1ChildInputs.addImageCommandInput('text_part_image', 'image', 'blank_image.png')
             # img.isVisible = False  # TODO implement
-            grp1ChildInputs.addTextBoxCommandInput('text_part_name', 'name', 'name', 1, False)
-            grp1ChildInputs.addTextBoxCommandInput('text_part_ipn', 'IPN', 'IPN', 1, False)
-            grp1ChildInputs.addTextBoxCommandInput('text_part_description', 'description', 'description', 1, False)
-            grp1ChildInputs.addTextBoxCommandInput('text_part_notes', 'note', 'note', 2, False)
-            grp1ChildInputs.addTextBoxCommandInput('text_part_keywords', 'keywords', 'keywords', 1, False)
-            grp1ChildInputs.addTextBoxCommandInput('text_part_category', 'category', 'category', 1, True)
+            grp1ChildInputs.addTextBoxCommandInput('text_part_name', 'Name', '', 1, False)
+            grp1ChildInputs.addTextBoxCommandInput('text_part_ipn', 'IPN', '', 1, False)
+            grp1ChildInputs.addTextBoxCommandInput('text_part_description', 'Description', '', 1, False)
+            grp1ChildInputs.addTextBoxCommandInput('text_part_notes', 'Note', '', 2, False)
+            grp1ChildInputs.addTextBoxCommandInput('text_part_keywords', 'Keywords', '', 1, False)
+            grp1ChildInputs.addTextBoxCommandInput('text_part_category', 'Category', 'category', 1, True)
             grp1ChildInputs.addTextBoxCommandInput('text_part_link', '', 'linktext', 1, True)
 
             grpCmdInput2 = tab1ChildInputs.addGroupCommandInput('grp_2', 'Settings')
             grp2ChildInputs = grpCmdInput2.children
-            grp2ChildInputs.addBoolValueInput('bool_part_virtual', 'virtual', True)
-            grp2ChildInputs.addBoolValueInput('bool_part_template', 'template', True)
-            grp2ChildInputs.addBoolValueInput('bool_part_assembly', 'assembly', True)
-            grp2ChildInputs.addBoolValueInput('bool_part_component', 'component', True)
-            grp2ChildInputs.addBoolValueInput('bool_part_trackable', 'trackable', True)
-            grp2ChildInputs.addBoolValueInput('bool_part_purchaseable', 'purchaseable', True)
-            grp2ChildInputs.addBoolValueInput('bool_part_salable', 'salable', True)
+            grp2ChildInputs.addBoolValueInput('bool_part_virtual', 'Virtual', True)
+            grp2ChildInputs.addBoolValueInput('bool_part_template', 'Template', True)
+            grp2ChildInputs.addBoolValueInput('bool_part_assembly', 'Assembly', True)
+            grp2ChildInputs.addBoolValueInput('bool_part_component', 'Component', True)
+            grp2ChildInputs.addBoolValueInput('bool_part_trackable', 'Trackable', True)
+            grp2ChildInputs.addBoolValueInput('bool_part_purchaseable', 'Purchasable', True)
+            grp2ChildInputs.addBoolValueInput('bool_part_salable', 'Salable', True)
 
             grpCmdInput3 = tab1ChildInputs.addGroupCommandInput('grp_3', 'Supply')
             grp3ChildInputs = grpCmdInput3.children
@@ -149,54 +159,8 @@ class ShowPartCommand(apper.Fusion360CommandBase):
             helpers.error()
 
     # cstm fnc
-    @apper.lib_import(config.lib_path)
-    def part_create(self, occ, cat):
-        """ create part based on occurence """
-        from inventree.part import Part
-
-        ao = apper.AppObjects()
-
-        # build up args
-        part_kargs = {
-            'name': occ.component.name,
-            'description': occ.component.description if occ.component.description else 'None',
-            'IPN': occ.component.partNumber,
-            'active': True,
-            'virtual': False,
-        }
-        # add category if set
-        if cat:
-            part_kargs.update({'category': cat.pk})
-        # create part itself
-        part = Part.create(functions.inv_api(), part_kargs)
-        # check if part created - else raise error
-        if not part:
-            ao.ui.messageBox('Error occured during API-call')
-            return
-        elif not part.pk:
-            error_detail = [f'<strong>{a}</strong>\n{b[0]}' for a, b in part._data.items()]
-            ao.ui.messageBox(f'Error occured:<br><br>{"<br>".join(error_detail)}')
-            return
-
-        Fusion360Parameters.ID.value.create_parameter(part, occ.component.id)
-        Fusion360Parameters.AREA.value.create_parameter(part, occ.physicalProperties.area)
-        Fusion360Parameters.VOLUME.value.create_parameter(part, occ.physicalProperties.volume)
-        Fusion360Parameters.MASS.value.create_parameter(part, occ.physicalProperties.mass)
-        Fusion360Parameters.DENSITY.value.create_parameter(part, occ.physicalProperties.density)
-
-        if occ.component.material and occ.component.material.name:
-            Fusion360Parameters.MATERIAL.value.create_parameter(part, occ.component.material.name)
-
-        axis = ['x', 'y', 'z']
-        bb_min = {a: getattr(occ.boundingBox.minPoint, a) for a in axis}
-        bb_max = {a: getattr(occ.boundingBox.maxPoint, a) for a in axis}
-        bb = {a: bb_max[a] - bb_min[a] for a in axis}
-
-        Fusion360Parameters.BOUNDING_BOX_WIDTH.value.create_parameter(part, bb["x"])
-        Fusion360Parameters.BOUNDING_BOX_HEIGHT.value.create_parameter(part, bb["y"])
-        Fusion360Parameters.BOUNDING_BOX_DEPTH.value.create_parameter(part, bb["z"])
-
-        return part
+    def part_create(self, occ: adsk.fusion.Occurrence, cat: str):
+        return helpers.create_f360_part(occ, cat)
 
     def part_refresh(self, occ, inp, part):
         """ updates PartInfo command-inputs with values for supplied parts """
