@@ -118,8 +118,6 @@ try:
     # Ensure templates exsist
     functions.init_Fusion360()
 
-    print("InvenTreeLink started.")
-
 except:  # noqa: E722
     app = adsk.core.Application.get()
     ui = app.userInterface
