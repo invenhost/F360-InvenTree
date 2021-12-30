@@ -9,8 +9,8 @@ try:
     from . import functions
 
     # Create our addin definition object
-    my_addin = apper.FusionApp(config.app_name, config.company_name, False)
-    my_addin.root_path = config.app_path
+    inventreelink = apper.FusionApp(config.app_name, config.company_name, False)
+    inventreelink.root_path = config.app_path
 
     from .commands.EditPartCommand import EditPartCommand
     from .commands.BOMOverviewCommand import BomOverviewPaletteShowCommand
@@ -21,7 +21,7 @@ try:
     # Commands
 
     # Palette
-    my_addin.add_command(
+    inventreelink.add_command(
         'Show BOM overview',
         BomOverviewPaletteShowCommand,
         {
@@ -45,7 +45,7 @@ try:
     )
 
     # Commands that need the palette
-    my_addin.add_command(
+    inventreelink.add_command(
         'Load BOM for assembly',
         GenerateBomCommand,
         {
@@ -60,7 +60,7 @@ try:
         }
     )
 
-    my_addin.add_command(
+    inventreelink.add_command(
         'Edit Part',
         EditPartCommand,
         {
@@ -74,7 +74,7 @@ try:
         }
     )
 
-    my_addin.add_command(
+    inventreelink.add_command(
         'Import Part',
         ImportPartCommand,
         {
@@ -89,7 +89,7 @@ try:
         }
     )
 
-    my_addin.add_command(
+    inventreelink.add_command(
         'Upload STEP',
         UploadStepCommand,
         {
@@ -126,8 +126,8 @@ debug = True
 
 
 def run(context):
-    my_addin.run_app()
+    inventreelink.run_app()
 
 
 def stop(context):
-    my_addin.stop_app()
+    inventreelink.stop_app()
