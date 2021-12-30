@@ -95,11 +95,6 @@
         var args = {};
         adsk.fusionSendData('UploadBom', JSON.stringify(args));
     }
-    
-    function onClickSyncAll() {
-        var args = {};
-        adsk.fusionSendData('SyncAll', JSON.stringify(args));
-    }
 
     window.fusionJavaScriptHandler = {
         handle: function (action, data) {

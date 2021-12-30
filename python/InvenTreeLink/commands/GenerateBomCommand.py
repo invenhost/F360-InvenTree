@@ -91,7 +91,6 @@ class GenerateBomCommand(apper.Fusion360CommandBase):
                     f"{header_html}"
                     f"<p> {len(bom)} parts found in {datetime.now() - start}</p>"
                     f"{table_html}"
-                    "<button onclick='onClickSyncAll()' class='btn btn-outline-secondary'> Sync All </button>"
                 )
                 
                 palette.sendInfoToHTML(

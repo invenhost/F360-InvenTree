@@ -11,10 +11,6 @@ from .. import functions
         
 from ..functions import inv_api, inventree_get_part
 
-import threading
-import typing
-import sys
-
 # Class for a Fusion 360 Palette Command
 class BomOverviewCommand(apper.PaletteCommandBase):
 
@@ -54,14 +50,6 @@ class BomOverviewCommand(apper.PaletteCommandBase):
                 entitiesByToken = ao.product.findEntityByToken(token)
                 selections.add(entitiesByToken)  # TODO selection not working
                 helpers.get_cmd(ao, config.DEF_EDIT_PART).execute()
-
-            elif html_args.action == 'SyncAll':
-                root = ao.product.rootComponent
-
-                # sync_all_thread(ao, root)
-
-                t = threading.Thread(target=sync_all_thread, args=(ao, root))
-                t.start()
 
             # TODO investigate ghost answers
             # else:
@@ -108,56 +96,6 @@ def propose_create_f360_part(ao, component: adsk.fusion.Component, buttons):
     )
 
     return ao.ui.messageBox(text, "Sync All", buttons, 1)
-  
-
-@apper.lib_import(config.lib_path)
-def sync_all_thread(ao, root: adsk.fusion.Component):
-    print("Starting sync_all thread.")
-
-    palette = ao.ui.palettes.itemById(config.ITEM_PALETTE)
-
-    log_html = []
-    def log(message: str, color: str = "black"):
-        log_html.append(f'<span style="color: {color};">{message}</span>')
-
-        palette.sendInfoToHTML(
-            config.DEF_SYNC_LOG,
-            '<br />'.join(log_html)
-        )  
-        
-    palette.sendInfoToHTML(
-        config.DEF_GENERATE_BOM,
-        (
-            '<div id="loading">'
-                '<br><br><br>'
-                '<div class="d-flex justify-content-center">'
-                    '<div class="spinner-border" role="status"> </div>'
-                    '</div>'
-                '</div>'
-            
-                '<div class="d-flex justify-content-center">'
-                    '<p> Syncing <i><b><span id="status"></span></b></i>...</p>'
-                '</div>'
-
-                '<br />'
-            '</div>'
-
-            '<div class="d-flex justify-content-center">'
-                '<div id="sync_log"> </div>'
-            '</div'
-        )
-    )  
-
-    visited = dict()
-    sync_all(ao, root, log, None, visited, False)
-    
-    command = helpers.get_cmd(ao, config.DEF_GENERATE_BOM)
-    command.execute()
-
-    visited.clear()
-
-    print("Stopping thread...")
-    sys.exit()
 
 COLOR_WARNING = "rgb(255,145,0)"
     
