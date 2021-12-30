@@ -15,7 +15,7 @@ try:
     from .commands.EditPartCommand import EditPartCommand
     from .commands.BOMOverviewCommand import BomOverviewPaletteShowCommand
     from .commands.GenerateBomCommand import GenerateBomCommand
-    from .commands.ImportStlCommand import ImportStlCommand
+    from .commands.UploadStepCommand import UploadStepCommand
     from .commands.ImportPartCommand import ImportPartCommand
     
     # Commands
@@ -90,8 +90,8 @@ try:
     )
 
     my_addin.add_command(
-        'Export STEP',
-        ImportStlCommand,
+        'Upload STEP',
+        UploadStepCommand,
         {
             'cmd_description': 'Generates a STEP file and attaches it to a part',
             'cmd_id': config.DEF_SEND_STEP,

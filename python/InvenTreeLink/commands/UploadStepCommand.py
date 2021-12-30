@@ -11,7 +11,7 @@ from .. import helpers
 from .. import config
 
 
-class ImportStlCommand(apper.Fusion360CommandBase):
+class UploadStepCommand(apper.Fusion360CommandBase):
 
     @apper.lib_import(config.lib_path)
     def on_execute(self, command: adsk.core.Command, command_inputs: adsk.core.CommandInputs, args, input_values):
