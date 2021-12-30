@@ -107,11 +107,15 @@ try:
     app = adsk.core.Application.cast(adsk.core.Application.get())
     ui = app.userInterface
 
+
+    # Startup up error tracking
     functions.init_sentry()
 
+    # Load config
     if functions.load_config(ui) is False:
         ui.messageBox("Unable to load config.", config.app_name)
-    
+
+    # Ensure templates exsist
     functions.init_Fusion360()
 
     print("InvenTreeLink started.")
