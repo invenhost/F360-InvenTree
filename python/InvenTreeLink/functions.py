@@ -268,44 +268,6 @@ def inventree_get_part(part_id):
     else:
         # Just a single id.
         return find(parameters, part_id)
-
-    # def search(parameters, part_id):
-    #     try:
-    #         for param in parameters:
-    #             print("Paramater")
-
-    #         part = [a.part for a in parameters if a._data['data'] == part_id]
-    #         if len(part) == 1:
-    #             return Part(inv_api(), part[0])
-    #         elif len(part) > 0:
-    #             print(f"inventree_get_part(): Warning: {part_id} multiple ({len(part)}) matches:")
-    #             for id in part:
-    #                 p = Part(inv_api(), id)
-    #                 print(f"Part: {p.IPN} | {p.name}")
-    #             print()
-
-    #         else:                
-    #             print(f"inventree_get_part(): Warning: {part_id} has no ({len(part)}) matches!")
-
-    #         return False
-    #     except Exception as _e:
-    #         config.app_tracking.capture_exception(_e)
-    #         raise Exception from _e
-
-    # parameters = Parameter.list(inv_api())
-
-    # if not parameters:
-    #     parameters = []
-
-    # if type(part_id) in (list, tuple):
-    #     result = {}
-
-    #     for cur_id in part_id:
-    #         result[cur_id] = search(parameters, cur_id)
-
-    #     return result
-
-    # return search(parameters, part_id)
 # endregion
 
 # region bom functions
