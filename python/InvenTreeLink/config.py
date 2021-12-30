@@ -14,11 +14,13 @@ lib_path = os.path.join(app_path, lib_dir, '')
 # Magic numbers
 ITEM_PALETTE = 'InvenTreePalette'
 
+DEF_ENVIROMENT = 'FusionSolidEnvironment'
+
 DEF_SHOW_PALETTE = "ShowPalette"
-DEF_SEND_BOM = "SendBom"
+DEF_GENERATE_BOM = "SendBom"
 DEF_SEND_ONLINE_STATE = "SendOnlineState"
-DEF_SEND_PART = "SendPart"
-DEF_SEND_STEP = "SendStep"
+DEF_EDIT_PART = "SendPart"
+DEF_UPLOAD_STEP = "SendStep"
 DEF_IMPORT_PART = "ImportPart"
 DEF_SYNC_LOG = "SyncLog"
 

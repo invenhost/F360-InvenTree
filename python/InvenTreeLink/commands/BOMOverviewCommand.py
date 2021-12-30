@@ -38,7 +38,7 @@ class BomOverviewPaletteShowCommand(apper.PaletteCommandBase):
 
             if html_args.action == 'getBom':
                 if palette:
-                    command = helpers.get_cmd(ao, config.DEF_SEND_BOM)
+                    command = helpers.get_cmd(ao, config.DEF_GENERATE_BOM)
                     command.execute()
 
             elif html_args.action == 'getBomOnline':
@@ -53,7 +53,7 @@ class BomOverviewPaletteShowCommand(apper.PaletteCommandBase):
                 token = cmp.entityToken
                 entitiesByToken = ao.product.findEntityByToken(token)
                 selections.add(entitiesByToken)  # TODO selection not working
-                helpers.get_cmd(ao, config.DEF_SEND_PART).execute()
+                helpers.get_cmd(ao, config.DEF_EDIT_PART).execute()
 
             elif html_args.action == 'SyncAll':
                 root = ao.product.rootComponent
@@ -126,7 +126,7 @@ def sync_all_thread(ao, root: adsk.fusion.Component):
         )  
         
     palette.sendInfoToHTML(
-        config.DEF_SEND_BOM,
+        config.DEF_GENERATE_BOM,
         (
             '<div id="loading">'
                 '<br><br><br>'
@@ -151,7 +151,7 @@ def sync_all_thread(ao, root: adsk.fusion.Component):
     visited = dict()
     sync_all(ao, root, log, None, visited, False)
     
-    command = helpers.get_cmd(ao, config.DEF_SEND_BOM)
+    command = helpers.get_cmd(ao, config.DEF_GENERATE_BOM)
     command.execute()
 
     visited.clear()

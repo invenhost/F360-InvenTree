@@ -45,7 +45,7 @@ class GenerateBomCommand(apper.Fusion360CommandBase):
                 )
 
                 palette.sendInfoToHTML(
-                    config.DEF_SEND_BOM,
+                    config.DEF_GENERATE_BOM,
                     loading_html
                 )
 
@@ -95,7 +95,7 @@ class GenerateBomCommand(apper.Fusion360CommandBase):
                 )
                 
                 palette.sendInfoToHTML(
-                    config.DEF_SEND_BOM,
+                    config.DEF_GENERATE_BOM,
                     json.dumps(complete_html)
                 )
 
