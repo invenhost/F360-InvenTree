@@ -241,7 +241,7 @@ def inventree_get_part(part_id):
     from inventree.part import Part
     from inventree.base import Parameter
 
-    def find(parameters, part_id):
+    def search(parameters, part_id):
         part = [a.part for a in parameters if str(a.data) == str(part_id)]
 
         if len(part) == 1:
@@ -262,12 +262,12 @@ def inventree_get_part(part_id):
         result = {}
 
         for cur_id in part_id:
-            result[cur_id] = find(parameters, cur_id)
+            result[cur_id] = search(parameters, cur_id)
 
         return result
     else:
         # Just a single id.
-        return find(parameters, part_id)
+        return search(parameters, part_id)
 # endregion
 
 # region bom functions
