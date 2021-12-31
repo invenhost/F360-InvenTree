@@ -1,0 +1,11 @@
+{
+    "autodeskProduct": "Fusion360",
+    "type": "addin",
+    "id": "ee8341eb-bc50-4b16-9613-b97efdaef780",
+    "author": "Matthias Mair",
+    "description": "Link between Fusion 360 and InvenTree",
+    "version": "0.1.0",
+    "runOnStartup": true,
+    "supportedOS": "windows",
+    "editEnabled": true
+}

@@ -31,23 +31,25 @@ class Fusion360Template:
         })
 
     @apper.lib_import(config.lib_path)
-    def create_parameter(self, part, data):
+    def set(self, part, data):
         from inventree.base import Parameter
+        
+        params = Parameter.list(inv_api(), 
+            part=part.pk,
+            template=self.pk
+        )
 
-        Parameter.create(inv_api(), {'part': part.pk, 'template': self.pk, 'data': data})
+        if len(params) == 0:    
+            Parameter.create(inv_api(), {'part': part.pk, 'template': self.pk, 'data': data})
+        else:
+            param = params[0]
+            param.save({
+                "data": data
+            })
 
     @apper.lib_import(config.lib_path)
-    def update_parameter(self, part, data):
-        from inventree.base import Parameter
-
-        param = Parameter.list(inv_api(), {
-            "part": part.pk,
-            "template": self.pk
-        })[0]
-
-        param.save({
-            "data": data
-        })
+    def has_parameter(self, part):
+        test = ""  
 
     __PART_TEMPLATE_CACHE = {}
 
@@ -118,7 +120,7 @@ def load_config(ui: adsk.core.UserInterface):
             "next couple of input boxes.\n"
         )
 
-        def ask_user(line, context, default=""):
+        def ask_user(line, default=""):
             (value, cancelled) = ui.inputBox(
                 line, 
                 TITLE, 
@@ -131,7 +133,6 @@ def load_config(ui: adsk.core.UserInterface):
 
         address = ask_user(
             "Please enter the server address of the InvenTree instance.", 
-            "Instance address"
         )
 
         if address is None:
@@ -139,8 +140,7 @@ def load_config(ui: adsk.core.UserInterface):
             return False               
 
         token = ask_user(
-            "Please enter the user token:", 
-            "Authentication token", 
+            "Please enter the user token:"
         )
 
         if token is None:
@@ -148,8 +148,7 @@ def load_config(ui: adsk.core.UserInterface):
             return False
 
         part_category = ask_user(
-            "Please enter the part category's name were you would like the Part's to show up.", 
-            "Part Category",
+            "Please enter the part category's name were you would like the Part's to show up.",
             "plugin-test"
         )
 
@@ -157,15 +156,15 @@ def load_config(ui: adsk.core.UserInterface):
             ui.messageBox("Invalid part category", TITLE)
             return False
 
-        config_text = (
-            "[SERVER]\n"
-            "current = default\n"
-            "\n"
-            "[default]\n"
-            f"{config.CFG_ADDRESS} = {address}\n"
-            f"{config.CFG_TOKEN} = {token}\n"
-            f"{config.CFG_PART_CATEGORY} = {part_category}\n"            
-        )
+        config_text = '\n'.join((
+            "[SERVER]",
+            "current = default",
+            "",
+            "[default]",
+            f"{config.CFG_ADDRESS} = {address}",
+            f"{config.CFG_TOKEN} = {token}",
+            f"{config.CFG_PART_CATEGORY} = {part_category}",         
+        ))
 
         with open(config_path, "w") as f:
             f.write(config_text)
@@ -243,26 +242,33 @@ def inventree_get_part(part_id):
     from inventree.base import Parameter
 
     def search(parameters, part_id):
-        try:
-            part = [a.part for a in parameters if a._data['data'] == part_id]
-            if len(part) == 1:
-                return Part(inv_api(), part[0])
-            return False
-        except Exception as _e:
-            config.app_tracking.capture_exception(_e)
-            raise Exception from _e
+        part = [a.part for a in parameters if str(a.data) == str(part_id)]
 
-    parameters = Parameter.list(inv_api())
-    if not parameters:
-        parameters = []
+        if len(part) == 1:
+            return Part(inv_api(), part[0])
+        elif len(part) > 0:
+            print(f"inventree_get_part(): Warning: {part_id} multiple ({len(part)}) matches:")
+            for id in part:
+                p = Part(inv_api(), id)
+                print(f"Part: {p.IPN} | {p.name}")
+            print()
+
+        return False
+
+    # Get all fusion 360 named parts.
+    parameters = Parameter.list(inv_api(), template=Fusion360Parameters.ID.value.pk)
     if type(part_id) in (list, tuple):
+        # Process the list or tuple.
         result = {}
+
         for cur_id in part_id:
             result[cur_id] = search(parameters, cur_id)
-        return result
-    return search(parameters, part_id)
-# endregion
 
+        return result
+    else:
+        # Just a single id.
+        return search(parameters, part_id)
+# endregion
 
 # region bom functions
 def extract_bom():
@@ -281,15 +287,17 @@ def extract_bom():
         bom = []
         for occ in occs:
             comp = occ.component
-            jj = 0
-            for bomI in bom:
-                if bomI['component'] == comp:
-                    # Increment the instance count of the existing row.
-                    bomI['instances'] += 1
-                    break
-                jj += 1
+            already_exists = False
 
-            if jj == len(bom):
+            # Go through the BOM for items previously added 
+            for item in bom:
+                if item['component'] == comp:
+                    # Increment the instance count of the existing row.
+                    item['instances'] += 1
+                    already_exists = True
+                    break
+
+            if already_exists is False:
                 # Gather any BOM worthy values from the component
                 volume = 0
                 bodies = comp.bRepBodies
@@ -301,7 +309,13 @@ def extract_bom():
                 node = component_info(comp, comp_set=True)
                 node['volume'] = volume
                 node['linked'] = occ.isReferencedComponent
+                node['occurence'] = occ
+
                 bom.append(node)
+
+        bom_parts = inventree_get_part([item['id'] for item in bom])
+        for item in bom:
+            item['part'] = bom_parts[item['id']]
 
         # Display the BOM
         return bom
@@ -310,22 +324,24 @@ def extract_bom():
         raise _e
 
 
-def component_info(comp, parent='#', comp_set=False):
+def component_info(comp: adsk.fusion.Component, parent='#', comp_set: bool = False):
     """ returns a node element """
     node = {
         'name': comp.name,
-        'nbr': comp.partNumber,
+        'IPN': comp.partNumber,
         'id': comp.id,
         'revision-id': comp.revisionId,
         'instances': 1,
         'parent': parent,
     }
+
     if comp_set:
         node['component'] = comp
     else:
         node['state'] = {'opened': True, 'checkbox_disabled': False}
         node["type"] = "4-root_component"
         node["text"] = comp.name
+
     return node
 
 
@@ -337,7 +353,6 @@ def make_component_tree():
     node_list = []
 
     root_node = component_info(root)
-    root_node["type"] = "4-root_component"
     node_list.append(root_node)
 
     if root.occurrences.count > 0:
